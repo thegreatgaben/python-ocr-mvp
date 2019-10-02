@@ -12,7 +12,7 @@ def viewImage(image, windowTitle="Display"):
 
 
 if __name__ == "__main__":
-    print('Hello openCV')
-    inputBGR = cv2.imread('color-separation-images/File 2.jpg')
+    print('Hello OpenCV')
+    inputBGR = cv2.imread('images/File 2.jpg')
     inputBGR = cv2.resize(inputBGR, (800, 800))
     viewImage(inputBGR, 'Image')
