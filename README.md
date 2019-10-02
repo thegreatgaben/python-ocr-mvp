@@ -1,2 +1,5 @@
 # Python CV
 ## Code base for more experimental computer vision & image processing implementations in Python.
+
+### to run color separation
+`python3 color-separation.py`
