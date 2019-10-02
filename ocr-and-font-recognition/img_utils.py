@@ -1,5 +1,7 @@
+import os
 import numpy as np
 import cv2 as cv
+
 
 def basicLinearTransform(image):
     '''
@@ -29,4 +31,13 @@ def gammaCorrection(image, gamma=0.25):
 
     res = cv.LUT(image, lookUpTable)
     return res
+
+
+def outputImage(image, imageName):
+    # OpenCV does not create the directory for you
+    outputPath = os.path.join(os.path.dirname(__file__), 'test/output');
+    if not os.path.exists(outputPath):
+        os.mkdir(outputPath);
+    # show the output image
+    cv.imwrite(os.path.join(outputPath, imageName), image);
 
