@@ -11,10 +11,10 @@ import math
 import numpy as np
 import argparse
 import time
+import os
 import cv2 as cv
 
 print(cv.__version__);
-
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", type=str,
@@ -23,10 +23,12 @@ ap.add_argument("-c", "--min-confidence", type=float, default=0.75,
 	help="minimum probability required to inspect a region")
 args = vars(ap.parse_args())
 
+mainDir = os.path.dirname(__file__)
+
 # load the input image and grab the image dimensions
-imageName = args["image"];
-fileExt = imageName.split('.')[1];
-image = cv.imread(imageName)
+imagePath = args["image"];
+imageName = os.path.basename(imagePath);
+image = cv.imread(imagePath)
 orig = image.copy()
 (H, W) = image.shape[:2]
 
@@ -53,7 +55,7 @@ layerNames = [
 
 # load the pre-trained EAST text detector
 print("[INFO] loading EAST text detector...")
-net = cv.dnn.readNet("./frozen_east_text_detection.pb")
+net = cv.dnn.readNet(os.path.join(mainDir, "frozen_east_text_detection.pb"))
 
 # construct a blob from the image and then perform a forward pass of
 # the model to obtain the two output layer sets
@@ -136,5 +138,9 @@ for (startX, startY, endX, endY) in boxes:
 	# draw the bounding box on the image
 	cv.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
 
+# OpenCV does not create the directory for you
+outputPath = os.path.join(mainDir, 'test/output');
+if not os.path.exists(outputPath):
+    os.mkdir(outputPath);
 # show the output image
-cv.imwrite("outputs/result.{}".format(fileExt), orig)
+cv.imwrite(os.path.join(outputPath, imageName), orig);
