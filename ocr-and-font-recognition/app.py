@@ -1,4 +1,5 @@
 from text_detection import TextDetection
+from ocr import OCREngine
 from img_utils import outputImage
 
 import argparse
@@ -13,10 +14,17 @@ if __name__ == "__main__":
             help="path to input image")
     ap.add_argument("-c", "--min-confidence", type=float, default=0.75,
             help="minimum probability required to inspect a region")
+    ap.add_argument("-l", "--language", type=str,
+            help="selected language to recognise refer to tesseract's manual page for format")
     args = vars(ap.parse_args())
 
     textDetector = TextDetection(imagePath=args["image"], minConfidence=args["min_confidence"]);
-    resultImage = textDetector.detectTexts();
+    (boxes, confidences) = textDetector.detectTexts();
+    resultImage = textDetector.drawTextRegions(boxes);
 
     imageName = os.path.basename(args["image"]);
     outputImage(resultImage, imageName);
+
+    ocrEngine = OCREngine(language=args["language"], padding=True);
+    ocrEngine.performOCR(textDetector.origImage, boxes);
+

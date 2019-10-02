@@ -41,3 +41,10 @@ def outputImage(image, imageName):
     # show the output image
     cv.imwrite(os.path.join(outputPath, imageName), image);
 
+
+def binarizeImage(image):
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY);
+    # Otsu's thresholding
+    _, resultImage = cv.threshold(gray, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU);
+    return resultImage;
+
