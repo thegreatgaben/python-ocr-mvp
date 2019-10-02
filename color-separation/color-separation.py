@@ -11,7 +11,7 @@ def viewImage(image, windowTitle="Display"):
     cv2.destroyAllWindows()
 
 
-def hsvMask(image, hue_center, hue_var=15, sat_lo=70, sat_hi=255, val_lo=20, val_hi=255):
+def hsvMask(image, hue_center, hue_var=15, sat_lo=80, sat_hi=255, val_lo=20, val_hi=255):
     hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     assert (hue_var <
@@ -54,8 +54,8 @@ if __name__ == "__main__":
     inputBGR = cv2.imread('images/File 10.png')
     inputBGR = cv2.resize(inputBGR, (1600, 1600))
     for h in range(0, 180, 10):  # hue channel
-        for i in range(1, 6):  # structuring element diameter
-            blurred = cv2.blur(inputBGR, (25, 25))
+        for i in range(5,6):  # structuring element diameter
+            blurred = cv2.blur(inputBGR, (10, 10))
             masked = hsvMask(blurred, h)
             strel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (i, i))
             opened = cv2.morphologyEx(masked, cv2.MORPH_DILATE, strel)
