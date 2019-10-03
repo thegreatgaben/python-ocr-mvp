@@ -3,9 +3,9 @@ import cv2
 import numpy as np
 
 
-def edgeDetect(img, t1, t2):
-    blurred = cv2.blur(img, (9, 9))
-    edges = cv2.Canny(blurred, t1, t2)
+def edgeDetect(img, t1, t2, blur_size=0):
+    img = cv2.blur(img, (blur_size, blur_size))
+    edges = cv2.Canny(img, t1, t2)
     lines = cv2.HoughLinesP(edges, 1, np.pi/180, 100,
                             minLineLength=6, maxLineGap=8)
     if (type(lines) == None):
