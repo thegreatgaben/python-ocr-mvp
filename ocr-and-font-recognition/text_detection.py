@@ -67,6 +67,8 @@ class TextDetection:
         # apply non-maxima suppression to suppress weak, overlapping bounding
         # boxes
         boxes = non_max_suppression(np.array(rects), probs=confidences)
+        boxes = self.scaleBoundingBoxes(boxes);
+
         return (boxes, confidences);
 
 
@@ -126,17 +128,25 @@ class TextDetection:
         return (rects, confidences);
 
 
-    def drawTextRegions(self, boxes):
-        resultImage = self.origImage.copy();
-        # loop over the bounding boxes
+    def scaleBoundingBoxes(self, boxes):
+        scaledBoxes = []
         for (startX, startY, endX, endY) in boxes:
             # scale the bounding box coordinates based on the respective
-            # ratios
+            # ratios, since the boxes were obtained from the resized image
             startX = int(startX * self.ratioW)
             startY = int(startY * self.ratioH)
             endX = int(endX * self.ratioW)
             endY = int(endY * self.ratioH)
 
+            scaledBoxes.append((startX, startY, endX, endY));
+
+        return scaledBoxes;
+
+
+    def drawTextRegions(self, boxes):
+        resultImage = self.origImage.copy();
+        # loop over the bounding boxes
+        for (startX, startY, endX, endY) in boxes:
             # draw the bounding box on the image
             cv.rectangle(resultImage, (startX, startY), (endX, endY), (0, 255, 0), 2)
 

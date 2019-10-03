@@ -1,6 +1,6 @@
 from text_detection import TextDetection
 from ocr import OCREngine
-from img_utils import outputImage
+from img_utils import outputImage, testMSER
 
 import argparse
 import os
@@ -18,13 +18,18 @@ if __name__ == "__main__":
             help="selected language to recognise refer to tesseract's manual page for format")
     args = vars(ap.parse_args())
 
+    imagePath = args["image"];
+    image = cv.imread(imagePath);
+    boxes = testMSER(image);
+    '''
     textDetector = TextDetection(imagePath=args["image"], minConfidence=args["min_confidence"]);
     (boxes, confidences) = textDetector.detectTexts();
     resultImage = textDetector.drawTextRegions(boxes);
 
     imageName = os.path.basename(args["image"]);
     outputImage(resultImage, imageName);
+    '''
 
     ocrEngine = OCREngine(language=args["language"], padding=True);
-    ocrEngine.performOCR(textDetector.origImage, boxes);
+    ocrEngine.performOCR(image, boxes);
 
