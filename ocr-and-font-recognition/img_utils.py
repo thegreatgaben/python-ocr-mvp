@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import cv2 as cv
+import math
 
 
 def basicLinearTransform(image):
@@ -45,8 +46,12 @@ def outputImage(image, imageName):
 def testMSER(image, showResult=False):
     mser = cv.MSER_create()
 
+    # Preprocessing
     gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     blurred = cv.GaussianBlur(gray, (5, 5), 0);
+    # edges = cv.Canny(blurred, 85, 60, apertureSize=3)
+    # rotated = detectAndCorrectOrientation(image, edges);
+    detectRects(image, blurred, showResult=True);
 
     vis = image.copy()
 
@@ -55,40 +60,62 @@ def testMSER(image, showResult=False):
     for (x, y, w, h) in boxes:
         mappedBoxes.append([x, y, x + w, y + h]);
 
+    # Merge overlapping bounding boxes
     mappedBoxes = non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
-    for (startX, startY, endX, endY) in mappedBoxes:
-        cv.rectangle(vis, (startX, startY), (endX, endY), (0, 255, 0), 1);
 
     if showResult:
+        for (startX, startY, endX, endY) in mappedBoxes:
+            cv.rectangle(vis, (startX, startY), (endX, endY), (0, 255, 0), 1);
+
         while True:
             cv.imshow('image', vis)
             if cv.waitKey(5) == 27:
                 break
+        cv.destroyAllWindows();
 
     return mappedBoxes;
 
 
+def detectRects(image, preprocessed, minCoverageArea=0.6, showResult=False):
+    (imageHeight, imageWidth) = image.shape[:2];
+    imageArea = imageWidth * imageHeight;
 
-def detectAndRemoveRects(image, preprocessed, showResult=False):
     contourList, _ = cv.findContours(preprocessed.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
     resultImage = image.copy();
+    largestRect = None;
+    largestRectArea = 0;
     detectedRects = []
     for contour in contourList:
         perimeter = cv.arcLength(contour, True);
         approx = cv.approxPolyDP(contour, 0.04 * perimeter, True);
         if len(approx) == 4:
-            (x, y, w, h) = cv.boundingRect(approx)
-            rect = [x, y, x+w, y+h];
+            print(approx);
+            (x, y, w, h) = cv.boundingRect(contour)
+            rectArea = w * h;
+            if rectArea/imageArea < minCoverageArea or rectArea == imageArea:
+                continue;
+
+            # Points in detected rect would be ordered as top-left, top-right,
+            # bottom-left, bottom-right
+            rect = [(x, y), (x+w, y), (x, y+h), (x+w, y+h)];
             detectedRects.append(rect);
-            cv.rectangle(resultImage, (rect[0], rect[1]), (rect[2], rect[3]), (0, 255, 0), 1);
+            if largestRect == None or rectArea > largestRectArea:
+                largestRect = rect;
+                largestRectArea = rectArea;
 
     if showResult:
+        if largestRect is not None:
+            (tl, tr, bl, br) = largestRect;
+            cv.rectangle(resultImage, (tl[0], tl[1]), (br[0], br[1]), (0, 255, 0), 1);
+
         while True:
             cv.imshow('image', resultImage);
-            cv.imshow('preprocessed', preprocessed);
             if cv.waitKey(5) == 27:
                 break
+        cv.destroyAllWindows();
+
+    return (detectedRects, largestRect);
 
 
 def non_max_suppression_fast(boxes, overlapThresh):
@@ -146,4 +173,49 @@ def non_max_suppression_fast(boxes, overlapThresh):
     # return only the bounding boxes that were picked using the
     # integer data type
     return boxes[pick].astype("int")
+
+
+def fourPointPerspectiveTransform(image, refPts):
+    (tl, tr, bl, br) = refPts;
+    width = abs(tl[0] - tr[0]);
+    height = abs(tl[1] - bl[1]);
+
+    src = np.float32(refPts);
+    dst = np.float32([
+        [0, 0],
+        [width - 1, 0],
+        [width - 1, height - 1],
+        [0, height - 1]
+    ]);
+
+    transformMat = cv.getPerspectiveTransform(src, dst);
+    warped = cv.warpPerspective(image, transformMat, (width, height));
+
+    return warped;
+
+
+def detectAndCorrectOrientation(image, preprocessed, showResult=False):
+    (imageHeight, imageWidth) = image.shape[:2];
+    resultImage = image.copy();
+    lines = cv.HoughLinesP(preprocessed, 1, math.pi / 180.0, 100, minLineLength=50, maxLineGap=5)
+    angles = []
+
+    for x1, y1, x2, y2 in lines[0]:
+        cv.line(resultImage, (x1, y1), (x2, y2), (0, 255, 0), 3)
+        angle = math.degrees(math.atan2(y2 - y1, x2 - x1))
+        angles.append(angle)
+
+    medianAngle = np.median(angles);
+    rotationMatrix = cv.getRotationMatrix2D(((imageWidth-1)/2.0, (imageHeight-1)/2.0), medianAngle, 1)
+    rotated = cv.warpAffine(resultImage, rotationMatrix, (imageWidth, imageHeight));
+
+    if showResult:
+        while True:
+            cv.imshow('lines', resultImage);
+            cv.imshow('rotated', rotated);
+            if cv.waitKey(5) == 27:
+                break;
+
+    cv.destroyAllWindows();
+    return rotated;
 
