@@ -1,6 +1,7 @@
-from text_detection import TextDetection
+from east_text_detection import EASTTextDetection
+from mser_text_detection import MSERTextDetection
 from ocr import OCREngine
-from img_utils import outputImage, testMSER
+from img_utils import outputImage
 
 import argparse
 import os
@@ -18,18 +19,19 @@ if __name__ == "__main__":
             help="selected language to recognise refer to tesseract's manual page for format")
     args = vars(ap.parse_args())
 
-    imagePath = args["image"];
-    image = cv.imread(imagePath);
-    boxes = testMSER(image);
+    mser = MSERTextDetection(imagePath=args["image"]);
+    boxes = mser.detectTexts();
+    resultImage = mser.drawTextRegions(boxes);
+    mser.showResults(resultImage, resizeDims=(900, 700));
     '''
-    textDetector = TextDetection(imagePath=args["image"], minConfidence=args["min_confidence"]);
-    (boxes, confidences) = textDetector.detectTexts();
-    resultImage = textDetector.drawTextRegions(boxes);
+    east = EASTTextDetection(imagePath=args["image"], minConfidence=args["min_confidence"]);
+    (boxes, confidences) = east.detectTexts();
+    resultImage = east.drawTextRegions(boxes);
+    east.showResults(resultImage, resizeDims=(900, 700));
 
     imageName = os.path.basename(args["image"]);
     outputImage(resultImage, imageName);
     '''
-
     ocrEngine = OCREngine(language=args["language"], padding=True, roiPadding=0.025);
-    ocrEngine.performOCR(image, boxes, showResult=True);
+    ocrEngine.performOCR(mser.origImage, boxes);
 
