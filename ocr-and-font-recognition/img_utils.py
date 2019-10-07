@@ -43,7 +43,9 @@ def outputImage(image, imageName):
     cv.imwrite(os.path.join(outputPath, imageName), image);
 
 
-def testMSER(image, showResult=False):
+def testMSER(image, showResult=False, minCoverageArea=0.01):
+    (imageHeight, imageWidth) = image.shape[:2];
+
     mser = cv.MSER_create()
 
     # Preprocessing
@@ -51,29 +53,69 @@ def testMSER(image, showResult=False):
     blurred = cv.GaussianBlur(gray, (5, 5), 0);
     # edges = cv.Canny(blurred, 85, 60, apertureSize=3)
     # rotated = detectAndCorrectOrientation(image, edges);
-    detectRects(image, blurred, showResult=True);
+    # detectRects(image, blurred, showResult=True);
 
     vis = image.copy()
 
     _, boxes = mser.detectRegions(blurred)
-    mappedBoxes = []
+    mappedBoxes = [];
     for (x, y, w, h) in boxes:
-        mappedBoxes.append([x, y, x + w, y + h]);
+        if w/imageWidth >= minCoverageArea and h/imageHeight >= minCoverageArea:
+            mappedBoxes.append([x, y, x + w - 1, y + h - 1]);
 
     # Merge overlapping bounding boxes
     mappedBoxes = non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
+    mappedBoxes = sortBoundingBoxes(mappedBoxes);
+    mappedBoxes = mergeCloseBoundingBoxes(mappedBoxes);
 
     if showResult:
         for (startX, startY, endX, endY) in mappedBoxes:
-            cv.rectangle(vis, (startX, startY), (endX, endY), (0, 255, 0), 1);
-
-        while True:
-            cv.imshow('image', vis)
-            if cv.waitKey(5) == 27:
-                break
-        cv.destroyAllWindows();
+            cv.rectangle(vis, (startX, startY), (endX, endY), (0, 255, 0), 2);
+            resized = cv.resize(vis, (800, 500));
+            while True:
+                cv.imshow('image', resized)
+                if cv.waitKey(5) == 27:
+                    break
+            cv.destroyAllWindows();
 
     return mappedBoxes;
+
+
+def sortBoundingBoxes(boxes):
+    '''
+    Sorts bounding boxes from left to right and top to bottom
+    '''
+    # Sort boxes according to bottom-right y axis
+    sortedBoxes = sorted(boxes, key=lambda rect: rect[-1]);
+    lineBottom = sortedBoxes[0][-1];
+    lineBegin = 0
+    for i in range(len(sortedBoxes)):
+        if sortedBoxes[i][1] > lineBottom:
+            # Sort boxes according to bottom-right x axis
+            sortedBoxes[lineBegin:i] = sorted(sortedBoxes[lineBegin:i], key=lambda rect: rect[-2])
+            lineBegin = i
+        lineBottom = max(sortedBoxes[i][-1], lineBottom)
+    # sort the last line
+    sortedBoxes[lineBegin:] = sorted(sortedBoxes[lineBegin:], key=lambda rect: rect[0])
+    return sortedBoxes;
+
+
+def mergeCloseBoundingBoxes(sortedBoxes, proximityThresh=20):
+    mergedBoxes = [];
+    rect = sortedBoxes[0];
+    for i in range(len(sortedBoxes)-1):
+        x1 = sortedBoxes[i][2];
+        x2 = sortedBoxes[i+1][0];
+        if abs(x1 - x2) <= proximityThresh:
+            rect[0] = min([rect[0], sortedBoxes[i][0], x2]);
+            rect[1] = min([rect[1], sortedBoxes[i][1], sortedBoxes[i+1][1]]);
+            rect[2] = max([rect[2], x1, sortedBoxes[i+1][2]]);
+            rect[3] = max([rect[3], sortedBoxes[i][3], sortedBoxes[i+1][3]]);
+        else:
+            mergedBoxes.append(rect);
+            rect = sortedBoxes[i+1];
+
+    return mergedBoxes;
 
 
 def detectRects(image, preprocessed, minCoverageArea=0.6, showResult=False):
@@ -98,7 +140,7 @@ def detectRects(image, preprocessed, minCoverageArea=0.6, showResult=False):
 
             # Points in detected rect would be ordered as top-left, top-right,
             # bottom-left, bottom-right
-            rect = [(x, y), (x+w, y), (x, y+h), (x+w, y+h)];
+            rect = [(x, y), (x+w-1, y), (x, y+h-1), (x+w-1, y+h-1)];
             detectedRects.append(rect);
             if largestRect == None or rectArea > largestRectArea:
                 largestRect = rect;

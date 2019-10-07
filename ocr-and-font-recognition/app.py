@@ -30,6 +30,6 @@ if __name__ == "__main__":
     outputImage(resultImage, imageName);
     '''
 
-    ocrEngine = OCREngine(language=args["language"], padding=True);
-    ocrEngine.performOCR(image, boxes);
+    ocrEngine = OCREngine(language=args["language"], padding=True, roiPadding=0.025);
+    ocrEngine.performOCR(image, boxes, showResult=True);
 

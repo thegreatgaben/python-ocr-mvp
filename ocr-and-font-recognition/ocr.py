@@ -8,10 +8,10 @@ class OCREngine:
     def __init__(self, language, padding=False, roiPadding=0.05):
         self.paddingEnabled = padding;
         self.roiPadding = roiPadding;
-        self.tesseractConfig = ("-l {} --oem 2 --psm 6".format(language));
+        self.tesseractConfig = ("-l {} --oem 2 --psm 7".format(language));
 
 
-    def performOCR(self, image, boxes):
+    def performOCR(self, image, boxes, showResult=False):
         gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY);
         (imageHeight, imageWidth) = image.shape[:2]
 
@@ -37,11 +37,16 @@ class OCREngine:
             unsharped = cv.addWeighted(textImage, 1.5, gaussian, -0.5, 0);
 
             _, binTextImage = cv.threshold(unsharped, 0, 255, cv.THRESH_BINARY_INV+cv.THRESH_OTSU);
+            # Opening morphological operation to remove noise
+            kernel = cv.getStructuringElement(cv.MORPH_RECT, (5, 5));
+            binTextImage = cv.morphologyEx(binTextImage, cv.MORPH_OPEN, kernel);
+
             finalTextImage = binTextImage;
 
             text = pytesseract.image_to_string(finalTextImage, config=self.tesseractConfig);
             if text != '':
-                while True:
+                print(text);
+                while showResult and True:
                     cv.imshow(text, finalTextImage);
                     if cv.waitKey(5) == 27:
                         break;
