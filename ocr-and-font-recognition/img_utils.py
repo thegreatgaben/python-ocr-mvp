@@ -67,16 +67,18 @@ def testMSER(image, showResult=False, minCoverageArea=0.01):
     mappedBoxes = non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
     mappedBoxes = sortBoundingBoxes(mappedBoxes);
     mappedBoxes = mergeCloseBoundingBoxes(mappedBoxes);
+    # mappedBoxes = non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.1);
 
     if showResult:
         for (startX, startY, endX, endY) in mappedBoxes:
             cv.rectangle(vis, (startX, startY), (endX, endY), (0, 255, 0), 2);
-            resized = cv.resize(vis, (800, 500));
-            while True:
-                cv.imshow('image', resized)
-                if cv.waitKey(5) == 27:
-                    break
-            cv.destroyAllWindows();
+
+        resized = cv.resize(vis, (900, 700));
+        while True:
+            cv.imshow('image', resized)
+            if cv.waitKey(5) == 27:
+                break
+        cv.destroyAllWindows();
 
     return mappedBoxes;
 
@@ -240,6 +242,10 @@ def detectAndCorrectOrientation(image, preprocessed, showResult=False):
     (imageHeight, imageWidth) = image.shape[:2];
     resultImage = image.copy();
     lines = cv.HoughLinesP(preprocessed, 1, math.pi / 180.0, 100, minLineLength=50, maxLineGap=5)
+
+    if lines is None:
+        return resultImage;
+
     angles = []
 
     for x1, y1, x2, y2 in lines[0]:
