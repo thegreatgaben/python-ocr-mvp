@@ -1,4 +1,4 @@
-name: image_proc
+name: nixel-ocr-and-font-recognition
 channels:
   - conda-forge
   - defaults
@@ -84,5 +84,6 @@ dependencies:
   - zstd=1.4.0=h3b9ef0a_0
   - pip:
     - imutils==0.5.3
-prefix: /home/gaben/miniconda3/envs/image_proc
+    - pillow==6.2.0
+    - pytesseract==0.3.0
 
