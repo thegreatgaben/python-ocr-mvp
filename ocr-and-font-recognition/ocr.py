@@ -47,7 +47,7 @@ class OCREngine:
             if text != '':
                 print(text);
                 while showResult and True:
-                    cv.imshow(text, finalTextImage);
+                    cv.imshow('text', finalTextImage);
                     if cv.waitKey(5) == 27:
                         break;
                 cv.destroyAllWindows();
