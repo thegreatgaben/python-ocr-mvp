@@ -1,7 +1,6 @@
 from east_text_detection import EASTTextDetection
 from mser_text_detection import MSERTextDetection
 from ocr import OCREngine
-from img_utils import outputImage
 
 import argparse
 import os
@@ -35,6 +34,7 @@ if __name__ == "__main__":
         east.showResults(resultImage);
         origImage = east.origImage;
 
-    ocrEngine = OCREngine(language=args["language"], padding=True, roiPadding=0.025);
+    imageExt = os.path.basename(args["image"]).split('.')[1];
+    ocrEngine = OCREngine(language=args["language"], padding=True, roiPadding=0.025, imageFileExt=imageExt);
     ocrEngine.performOCR(origImage, boxes);
 

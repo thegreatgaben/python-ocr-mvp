@@ -34,11 +34,13 @@ def gammaCorrection(image, gamma=0.25):
     return res
 
 
-def outputImage(image, imageName):
+def outputImage(image, imagePath):
     # OpenCV does not create the directory for you
     outputPath = os.path.join(os.path.dirname(__file__), 'test/output');
+    outputPath = os.path.join(outputPath, os.path.dirname(imagePath));
     if not os.path.exists(outputPath):
-        os.mkdir(outputPath);
+        os.makedirs(outputPath);
+    imageName = os.path.basename(imagePath);
     # show the output image
     cv.imwrite(os.path.join(outputPath, imageName), image);
 
