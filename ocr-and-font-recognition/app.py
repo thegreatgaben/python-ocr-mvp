@@ -27,8 +27,6 @@ if __name__ == "__main__":
     if (args["mser"]):
         mser = MSERTextDetection(imagePath=args["image"]);
         boxes = mser.detectTexts();
-        resultImage = mser.drawTextRegions(boxes);
-        mser.showResults(resultImage);
         origImage = mser.origImage;
     elif (args["east"]):
         east = EASTTextDetection(imagePath=args["image"], minConfidence=args["min_confidence"]);

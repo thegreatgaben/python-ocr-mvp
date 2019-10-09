@@ -1,14 +1,14 @@
 from text_detection import TextDetection
-from img_utils import *
+import img_utils
 
+import os
 import numpy as np
 import cv2 as cv
 
 class MSERTextDetection(TextDetection):
 
-    def __init__(self, imagePath, minCoverageArea=0.01):
+    def __init__(self, imagePath):
         TextDetection.__init__(self, imagePath);
-        self.minCoverageArea = minCoverageArea;
 
 
     def detectTexts(self):
@@ -19,17 +19,28 @@ class MSERTextDetection(TextDetection):
         blurred = cv.GaussianBlur(gray, (5, 5), 0);
 
         _, boxes = mser.detectRegions(blurred)
+
         mappedBoxes = [];
         for (x, y, w, h) in boxes:
-            if w/self.imageWidth >= self.minCoverageArea and h/self.imageHeight >= self.minCoverageArea:
-                mappedBoxes.append([x, y, x + w - 1, y + h - 1]);
+            mappedBoxes.append([x, y, x + w - 1, y + h - 1]);
 
         # Merge overlapping bounding boxes
-        mappedBoxes = non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
+        mappedBoxes = img_utils.non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
+
+        # MSER may only detect characters as regions instead of a text line
         mappedBoxes = self.sortBoundingBoxes(mappedBoxes);
         mappedBoxes = self.mergeCloseBoundingBoxes(mappedBoxes);
 
-        return mappedBoxes;
+        # May have overlapping regions again
+        mappedBoxes = img_utils.non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
+
+        finalBoxes = self.filterBoundingBoxes(mappedBoxes);
+
+        vis = self.drawTextRegions(finalBoxes);
+        filename = 'mser_detected_texts.{}'.format(self.imageExt);
+        img_utils.outputImage(vis, filename);
+
+        return finalBoxes;
 
 
     def sortBoundingBoxes(self, boxes):
@@ -71,4 +82,22 @@ class MSERTextDetection(TextDetection):
                 rect = sortedBoxes[i+1];
 
         return mergedBoxes;
+
+
+    def filterBoundingBoxes(self, boxes):
+        filteredBoxes = [];
+        for (x1, y1, x2, y2) in boxes:
+            w = abs(x1 - x2) + 1;
+            h = abs(y1 - y2) + 1;
+
+            if w/self.imageWidth < 0.01 or h/self.imageHeight < 0.01:
+                continue;
+
+            aspectRatio = w/h;
+            if aspectRatio < 0.4 or aspectRatio > 10.0:
+                continue;
+
+            filteredBoxes.append([x1, y1, x2, y2]);
+
+        return filteredBoxes;
 

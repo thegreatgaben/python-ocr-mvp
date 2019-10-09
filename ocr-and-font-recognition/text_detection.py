@@ -11,6 +11,7 @@ class TextDetection:
         self.image = cv.imread(imagePath)
         self.origImage = self.image.copy()
         (self.imageHeight, self.imageWidth) = self.image.shape[:2]
+        self.imageExt = self.imageName.split('.')[1];
 
 
     def detectTexts(self):
@@ -22,7 +23,7 @@ class TextDetection:
         # loop over the bounding boxes
         for (startX, startY, endX, endY) in boxes:
             # draw the bounding box on the image
-            cv.rectangle(resultImage, (startX, startY), (endX, endY), (0, 255, 0), 2)
+            cv.rectangle(resultImage, (startX, startY), (endX, endY), (0, 255, 0), 4)
 
         return resultImage;
 
