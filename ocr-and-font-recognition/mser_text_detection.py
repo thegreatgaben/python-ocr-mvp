@@ -1,9 +1,13 @@
 from text_detection import TextDetection
+from swt import SWTScrubber
 import img_utils
 
 import os
 import numpy as np
 import cv2 as cv
+
+def nothing(x):
+    pass;
 
 class MSERTextDetection(TextDetection):
 
@@ -34,7 +38,7 @@ class MSERTextDetection(TextDetection):
         # May have overlapping regions again
         mappedBoxes = img_utils.non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
 
-        finalBoxes = self.filterBoundingBoxes(mappedBoxes);
+        finalBoxes = self.filterBoundingBoxes(blurred, mappedBoxes);
 
         vis = self.drawTextRegions(finalBoxes);
         filename = 'mser_detected_texts.{}'.format(self.imageExt);
@@ -84,8 +88,11 @@ class MSERTextDetection(TextDetection):
         return mergedBoxes;
 
 
-    def filterBoundingBoxes(self, boxes):
+    def filterBoundingBoxes(self, preprocessed, boxes):
         filteredBoxes = [];
+        swt = SWTScrubber();
+        (edges, sobelx, sobely, theta) = swt.create_derivative(preprocessed);
+
         for (x1, y1, x2, y2) in boxes:
             w = abs(x1 - x2) + 1;
             h = abs(y1 - y2) + 1;
@@ -95,6 +102,30 @@ class MSERTextDetection(TextDetection):
 
             aspectRatio = w/h;
             if aspectRatio < 0.4 or aspectRatio > 20.0:
+                continue;
+
+            (textSWT, componentsMap) = swt.scrubWithDerivative(
+                    edges[y1:y2, x1:x2],
+                    sobelx[y1:y2, x1:x2],
+                    sobely[y1:y2, x1:x2],
+                    theta[y1:y2, x1:x2]
+            );
+            variances = [];
+            for label,component in componentsMap.items():
+                swtVariance = np.var(textSWT[np.nonzero(component)]);
+                if swtVariance > 0:
+                    variances.append(swtVariance);
+
+            if len(variances) == 0:
+                continue;
+
+            meanVariance = np.mean(np.array(variances));
+            print("Mean variance: {}".format(meanVariance));
+            '''
+            cv.imshow('image', textSWT);
+            cv.waitKey(0);
+            '''
+            if meanVariance < 1.0 or meanVariance > 40.0:
                 continue;
 
             filteredBoxes.append([x1, y1, x2, y2]);

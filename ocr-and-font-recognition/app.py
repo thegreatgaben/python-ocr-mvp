@@ -32,7 +32,9 @@ if __name__ == "__main__":
         (boxes, confidences) = east.detectTexts();
         origImage = east.origImage;
 
+    '''
     imageExt = os.path.basename(args["image"]).split('.')[1];
     ocrEngine = OCREngine(language=args["language"], padding=True, roiPadding=0.025, imageFileExt=imageExt);
     ocrEngine.performOCR(origImage, boxes);
+    '''
 
