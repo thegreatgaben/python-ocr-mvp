@@ -94,7 +94,7 @@ class MSERTextDetection(TextDetection):
                 continue;
 
             aspectRatio = w/h;
-            if aspectRatio < 0.4 or aspectRatio > 10.0:
+            if aspectRatio < 0.4 or aspectRatio > 20.0:
                 continue;
 
             filteredBoxes.append([x1, y1, x2, y2]);

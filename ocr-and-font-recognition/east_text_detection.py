@@ -4,7 +4,7 @@ https://www.pyimagesearch.com/2018/08/20/opencv-text-detection-east-text-detecto
 '''
 
 from text_detection import TextDetection
-from img_utils import *
+import img_utils
 
 from imutils.object_detection import non_max_suppression
 import math
@@ -32,7 +32,7 @@ class EASTTextDetection(TextDetection):
 
 
     def detectTexts(self):
-        self.image = gammaCorrection(self.image);
+        self.image = img_utils.gammaCorrection(self.image);
 
         # define the two output layer names for the EAST detector model that
         # we are interested -- the first is the output probabilities and the
@@ -63,6 +63,10 @@ class EASTTextDetection(TextDetection):
         # boxes
         boxes = non_max_suppression(np.array(rects), probs=confidences)
         boxes = self.scaleBoundingBoxes(boxes);
+
+        vis = self.drawTextRegions(boxes);
+        filename = 'east_detected_texts.{}'.format(self.imageExt);
+        img_utils.outputImage(vis, filename);
 
         return (boxes, confidences);
 

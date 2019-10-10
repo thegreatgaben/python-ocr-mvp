@@ -30,8 +30,6 @@ if __name__ == "__main__":
     elif (args["east"]):
         east = EASTTextDetection(imagePath=args["image"], minConfidence=args["min_confidence"]);
         (boxes, confidences) = east.detectTexts();
-        resultImage = east.drawTextRegions(boxes);
-        east.showResults(resultImage);
         origImage = east.origImage;
 
     imageExt = os.path.basename(args["image"]).split('.')[1];
