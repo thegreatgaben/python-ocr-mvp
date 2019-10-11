@@ -4,7 +4,6 @@ import math
 import matplotlib
 from hsvMask import hsvMask
 from edgeDetect import edgeDetect
-from utils import viewImage
 
 
 def nothing(x):
@@ -16,13 +15,13 @@ if __name__ == "__main__":
     hue = 0
     while True:
         cv2.namedWindow('frame')
-        frame = cv2.imread('images/File 10.png')
+        frame = cv2.imread('images/img1.jpg')
         frame = cv2.resize(frame, (1000, 700))
         cv2.createTrackbar('t1', 'frame', 20, 200, nothing)
         cv2.createTrackbar('t2', 'frame', 40, 200, nothing)
         t1 = cv2.getTrackbarPos('t1', 'frame')
         t2 = cv2.getTrackbarPos('t2', 'frame')
-        edges = edgeDetect(frame, t1, t2, 5)
+        edges = edgeDetect(frame, t1, t2, 10)
         hue_masked = hsvMask(frame, hue)
         edges = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
         combined = cv2.addWeighted(hue_masked, 0.8, edges, 1, 0)
