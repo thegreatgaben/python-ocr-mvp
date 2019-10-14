@@ -38,7 +38,7 @@ class OCREngine:
             gaussian = cv.GaussianBlur(textImage, (5, 5), 0);
             textImage = cv.addWeighted(textImage, 1.5, gaussian, -0.5, 0);
 
-            _, binTextImage = cv.threshold(textImage, 0, 255, cv.THRESH_BINARY_INV+cv.THRESH_OTSU);
+            _, binTextImage = cv.threshold(textImage, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU);
             # Opening morphological operation to remove noise
             kernel = cv.getStructuringElement(cv.MORPH_RECT, (5, 5));
             binTextImage = cv.morphologyEx(binTextImage, cv.MORPH_OPEN, kernel);
