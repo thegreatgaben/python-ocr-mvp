@@ -41,14 +41,26 @@ class SWTScrubber:
         return final_mask
         '''
 
+
     def scrubWithDerivative(self, edges, sobelx, sobely, theta):
+        swtStart = time.clock();
         swt = self._swt(theta, edges, sobelx, sobely)
+        swtEnd = time.clock() - swtStart;
+
+        ccStart = time.clock();
         shapes = self._connect_components(swt)
+        ccEnd = time.clock() - ccStart;
+
+        if self.diagnostics:
+            print("[INFO] SWT Transform time: {:.2f} seconds".format(swtEnd));
+            print("[INFO] Connected Components time: {:.2f} seconds".format(ccEnd));
+            print();
+
         return (swt, shapes);
 
 
     def create_derivative(self, image):
-        edges = cv.Canny(image, 130, 200)
+        edges = cv.Canny(image, 130, 180)
 
         # Create gradient map using Sobel
         sobelx64f = cv.Sobel(image, cv.CV_64F,1,0,ksize=-1)
@@ -80,48 +92,45 @@ class SWTScrubber:
         grad_y_g = step_y_g / mag_g
 
         (imageHeight, imageWidth) = edges.shape[:2];
-        for x in range(imageWidth):
-            for y in range(imageHeight):
-                if edges[y, x] == 0:
-                    continue;
+        (yIndices, xIndices) = np.nonzero(edges);
+        for (y, x) in list(zip(yIndices, xIndices)):
+            grad_x = grad_x_g[y, x]
+            grad_y = grad_y_g[y, x]
+            ray = [(x, y)]
+            prev_x, prev_y, i = x, y, 0
+            while True:
+                i += 1
+                cur_x = math.floor(x + grad_x * i)
+                cur_y = math.floor(y + grad_y * i)
 
-                grad_x = grad_x_g[y, x]
-                grad_y = grad_y_g[y, x]
-                ray = [(x, y)]
-                prev_x, prev_y, i = x, y, 0
-                while True:
-                    i += 1
-                    cur_x = math.floor(x + grad_x * i)
-                    cur_y = math.floor(y + grad_y * i)
+                if cur_x != prev_x or cur_y != prev_y:
+                    # Reached past image boundaries
+                    if cur_x < 0 or cur_x >= imageWidth or cur_y < 0 or cur_y >= imageHeight:
+                        break;
 
-                    if cur_x != prev_x or cur_y != prev_y:
-                        # Reached past image boundaries
-                        if cur_x < 0 or cur_x >= imageWidth or cur_y < 0 or cur_y >= imageHeight:
-                            break;
-
-                        # found edge,
-                        if edges[cur_y, cur_x] > 0:
-                            ray.append((cur_x, cur_y))
-                            theta_point = theta[y, x]
-                            alpha = theta[cur_y, cur_x]
-
-                            ratio = grad_x * -grad_x_g[cur_y, cur_x] + grad_y * -grad_y_g[cur_y, cur_x];
-                            if ratio > 1.0:
-                                ratio = 1.0;
-                            elif ratio < -1.0:
-                                ratio = -1.0;
-
-                            # Check that the gradient direction of the newly found edge pixel (q) is roughly opposite
-                            # to the current edge pixel (p)
-                            if math.acos(ratio) < np.pi/2.0:
-                                thickness = math.sqrt( (cur_x - x) * (cur_x - x) + (cur_y - y) * (cur_y - y) )
-                                for (rp_x, rp_y) in ray:
-                                    swt[rp_y, rp_x] = min(thickness, swt[rp_y, rp_x])
-                                rayList.append(ray)
-                            break
+                    # found edge,
+                    if edges[cur_y, cur_x] > 0:
                         ray.append((cur_x, cur_y))
-                        prev_x = cur_x
-                        prev_y = cur_y
+                        theta_point = theta[y, x]
+                        alpha = theta[cur_y, cur_x]
+
+                        ratio = grad_x * -grad_x_g[cur_y, cur_x] + grad_y * -grad_y_g[cur_y, cur_x];
+                        if ratio > 1.0:
+                            ratio = 1.0;
+                        elif ratio < -1.0:
+                            ratio = -1.0;
+
+                        # Check that the gradient direction of the newly found edge pixel (q) is roughly opposite
+                        # to the current edge pixel (p)
+                        if math.acos(ratio) < np.pi/2.0:
+                            thickness = math.sqrt( (cur_x - x) * (cur_x - x) + (cur_y - y) * (cur_y - y) )
+                            for (rp_x, rp_y) in ray:
+                                swt[rp_y, rp_x] = min(thickness, swt[rp_y, rp_x])
+                            rayList.append(ray)
+                        break
+                    ray.append((cur_x, cur_y))
+                    prev_x = cur_x
+                    prev_y = cur_y
 
         # Compute median SWT
         for ray in rayList:
@@ -320,13 +329,12 @@ class SWTScrubber:
 if __name__ == '__main__':
     t0 = time.clock()
     outputPath = os.path.join(os.path.dirname(__file__), 'test/swt');
-    local_filename = os.path.join(os.path.dirname(__file__), 'test/input/pnd_sample.jpg');
-    final_mask = SWTScrubber.scrub(local_filename)
+    local_filename = os.path.join(os.path.dirname(__file__), 'test/input/GoldenSpoon.jpg');
+    img = cv.imread(local_filename, cv.IMREAD_GRAYSCALE);
+    blurred = cv.GaussianBlur(img, (5, 5), 0);
+    swt = SWTScrubber();
+    final_mask = swt.scrub(blurred)
     resultImage = final_mask * 255;
     print("Time taken: {}".format(time.clock() - t0));
-    while True:
-        cv.imshow('result', resultImage);
-        if cv.waitKey(5) == 27:
-            break;
     cv.imwrite('{}/final.jpg'.format(outputPath), resultImage);
 

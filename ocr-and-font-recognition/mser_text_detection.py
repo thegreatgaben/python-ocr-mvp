@@ -6,9 +6,6 @@ import os
 import numpy as np
 import cv2 as cv
 
-def nothing(x):
-    pass;
-
 class MSERTextDetection(TextDetection):
 
     def __init__(self, imagePath):
@@ -120,12 +117,12 @@ class MSERTextDetection(TextDetection):
                 continue;
 
             meanVariance = np.mean(np.array(variances));
-            print("Mean variance: {}".format(meanVariance));
             '''
+            print("Mean variance: {}".format(meanVariance));
             cv.imshow('image', textSWT);
             cv.waitKey(0);
             '''
-            if meanVariance < 1.0 or meanVariance > 40.0:
+            if meanVariance < 0.5 or meanVariance > 40.0:
                 continue;
 
             filteredBoxes.append([x1, y1, x2, y2]);
