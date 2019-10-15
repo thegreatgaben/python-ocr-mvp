@@ -10,16 +10,16 @@ import cv2 as cv
 
 class MSERTextDetection(TextDetection):
 
-    def __init__(self, imagePath, diagnostics=False):
-        TextDetection.__init__(self, imagePath);
+    def __init__(self, diagnostics=False):
+        TextDetection.__init__(self);
         self.diagnostics = diagnostics;
 
 
-    def detectTexts(self):
+    def detectTexts(self, image, imageMeta):
         mser = cv.MSER_create()
 
         # Preprocessing
-        gray = cv.cvtColor(self.image, cv.COLOR_BGR2GRAY)
+        gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         blurred = cv.GaussianBlur(gray, (5, 5), 0);
 
         _, boxes = mser.detectRegions(blurred)
@@ -38,12 +38,13 @@ class MSERTextDetection(TextDetection):
         # May have overlapping regions again
         mappedBoxes = img_utils.non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
 
-        mappedBoxes = self.filterTextByGeometricProperties(blurred, mappedBoxes);
-        mappedBoxes = self.filterTextBySWT(blurred, mappedBoxes);
+        mappedBoxes = self.filterTextByGeometricProperties(blurred, mappedBoxes, imageMeta);
+        mappedBoxes = self.filterTextBySWT(blurred, mappedBoxes, imageMeta);
 
-        vis = self.drawTextRegions(mappedBoxes);
-        filename = 'mser_detected_texts.{}'.format(self.imageExt);
-        img_utils.outputImage(vis, filename);
+        if self.diagnostics:
+            vis = self.drawTextRegions(image, mappedBoxes);
+            filename = 'mser_detected_texts.{}'.format(imageMeta["ext"]);
+            img_utils.outputImage(vis, filename);
 
         return mappedBoxes;
 
@@ -89,16 +90,17 @@ class MSERTextDetection(TextDetection):
         return mergedBoxes;
 
 
-    def filterTextByGeometricProperties(self, preprocessed, boxes):
+    def filterTextByGeometricProperties(self, preprocessed, boxes, imageMeta):
         filteredBoxes = [];
         _, binImage = cv.threshold(preprocessed, 0, 255, cv.THRESH_BINARY_INV+cv.THRESH_OTSU);
-        img_utils.outputImage(binImage, "bin.{}".format(self.imageExt));
+        if self.diagnostics:
+            img_utils.outputImage(binImage, "bin.{}".format(imageMeta["ext"]));
 
         for (x1, y1, x2, y2) in boxes:
             w = abs(x1 - x2) + 1;
             h = abs(y1 - y2) + 1;
 
-            if w/self.imageWidth < 0.01 or h/self.imageHeight < 0.01:
+            if w/imageMeta["width"] < 0.01 or h/imageMeta["height"] < 0.01:
                 continue;
 
             aspectRatio = w/h;
@@ -145,7 +147,7 @@ class MSERTextDetection(TextDetection):
         return filteredBoxes;
 
 
-    def filterTextBySWT(self, preprocessed, boxes):
+    def filterTextBySWT(self, preprocessed, boxes, imageMeta):
         filteredBoxes = [];
         swt = SWTScrubber();
         (edges, sobelx, sobely, theta) = swt.create_derivative(preprocessed);
@@ -165,8 +167,8 @@ class MSERTextDetection(TextDetection):
                     variances.append(swtVariance);
 
             if self.diagnostics:
-                img_utils.outputImage(edges[y1:y2, x1:x2], "swt/candidates/candidate_{}_edges.{}".format(i, self.imageExt));
-                img_utils.outputImage(textSWT * 100, "swt/candidates/candidate_{}_swt.{}".format(i, self.imageExt));
+                img_utils.outputImage(edges[y1:y2, x1:x2], "swt/candidates/candidate_{}_edges.{}".format(i, imageMeta["ext"]));
+                img_utils.outputImage(textSWT * 100, "swt/candidates/candidate_{}_swt.{}".format(i, imageMeta["ext"]));
 
             i += 1;
             if len(variances) == 0:

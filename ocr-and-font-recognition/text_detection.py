@@ -3,23 +3,16 @@ import cv2 as cv
 
 class TextDetection:
 
-    def __init__(self, imagePath):
+    def __init__(self):
         self.mainDir = os.path.dirname(__file__)
-
-        # load the input image and grab the image dimensions
-        self.imageName = os.path.basename(imagePath);
-        self.image = cv.imread(imagePath)
-        self.origImage = self.image.copy()
-        (self.imageHeight, self.imageWidth) = self.image.shape[:2]
-        self.imageExt = self.imageName.split('.')[1];
 
 
     def detectTexts(self):
         pass;
 
 
-    def drawTextRegions(self, boxes):
-        resultImage = self.origImage.copy();
+    def drawTextRegions(self, image, boxes):
+        resultImage = image.copy();
         # loop over the bounding boxes
         for (startX, startY, endX, endY) in boxes:
             # draw the bounding box on the image

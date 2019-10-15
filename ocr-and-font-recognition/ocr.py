@@ -5,17 +5,17 @@ import pytesseract
 
 class OCREngine:
 
-    def __init__(self, language, padding=False, roiPadding=0.05, imageFileExt='jpg'):
+    def __init__(self, language, padding=False, roiPadding=0.05, diagnostics=False):
         self.paddingEnabled = padding;
         self.roiPadding = roiPadding;
         self.tesseractConfig = ("-l {} --oem 2 --psm 7".format(language));
-        self.imageFileExt = imageFileExt;
+        self.diagnostics = diagnostics;
 
 
-    def performOCR(self, image, boxes, showResult=False):
+    def performOCR(self, image, boxes, imageMeta, showResult=False):
         gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY);
-        (imageHeight, imageWidth) = image.shape[:2]
 
+        recognisedTexts = [];
         index = 0;
         for (startX, startY, endX, endY) in boxes:
             if self.paddingEnabled:
@@ -28,8 +28,8 @@ class OCREngine:
                 # apply padding to each side of the bounding box, respectively
                 startX = max(0, startX - dX)
                 startY = max(0, startY - dY)
-                endX = min(imageWidth, endX + (dX * 2))
-                endY = min(imageHeight, endY + (dY * 2))
+                endX = min(imageMeta["width"], endX + (dX * 2))
+                endY = min(imageMeta["height"], endY + (dY * 2))
 
             # Some preprocessing to (hopefully) improve OCR results
             textImage = gray[startY:endY, startX:endX];
@@ -48,11 +48,15 @@ class OCREngine:
             text = pytesseract.image_to_string(finalTextImage, config=self.tesseractConfig);
             if text != '':
                 print(text);
-                textHeight = finalTextImage.shape[0];
-                cv.putText(textImage, text, (0, 50), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2, cv.LINE_AA);
-                img_utils.outputImage(textImage, 'ocr/word_{}.{}'.format(index, self.imageFileExt));
-                img_utils.outputImage(finalTextImage, 'ocr/word_{}_bin.{}'.format(index, self.imageFileExt));
+                recognisedTexts.append(text);
+                if self.diagnostics:
+                    textHeight = finalTextImage.shape[0];
+                    cv.putText(textImage, text, (0, 50), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2, cv.LINE_AA);
+                    img_utils.outputImage(textImage, 'ocr/word_{}.{}'.format(index, imageMeta["ext"]));
+                    img_utils.outputImage(finalTextImage, 'ocr/word_{}_bin.{}'.format(index, imageMeta["ext"]));
 
             index += 1;
+
+        return recognisedTexts;
 
 

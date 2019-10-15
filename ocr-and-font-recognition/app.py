@@ -24,18 +24,21 @@ if __name__ == "__main__":
             help="selects the EAST text detection method");
     args = vars(ap.parse_args())
 
-    origImage = None;
+    image = cv.imread(args["image"]);
+    (imageHeight, imageWidth) = image.shape[:2];
+    imageMeta = {};
+    imageMeta["ext"] = os.path.basename(args["image"]).split('.')[1];
+    imageMeta["width"] = imageWidth;
+    imageMeta["height"] = imageHeight;
+
     if (args["mser"]):
-        mser = MSERTextDetection(imagePath=args["image"]);
-        boxes = mser.detectTexts();
-        origImage = mser.origImage;
+        mser = MSERTextDetection();
+        boxes = mser.detectTexts(image, imageMeta);
     elif (args["east"]):
-        east = EASTTextDetection(imagePath=args["image"], minConfidence=args["min_confidence"]);
-        (boxes, confidences) = east.detectTexts();
-        origImage = east.origImage;
+        east = EASTTextDetection(minConfidence=args["min_confidence"]);
+        (boxes, confidences) = east.detectTexts(image, imageMeta);
 
     if not args["no_ocr"]:
-        imageExt = os.path.basename(args["image"]).split('.')[1];
-        ocrEngine = OCREngine(language=args["language"], padding=True, roiPadding=0.025, imageFileExt=imageExt);
-        ocrEngine.performOCR(origImage, boxes);
+        ocrEngine = OCREngine(language=args["language"], padding=True, roiPadding=0.025);
+        ocrEngine.performOCR(image, boxes, imageMeta);
 

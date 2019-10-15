@@ -15,24 +15,22 @@ import cv2 as cv
 
 class EASTTextDetection(TextDetection):
 
-    def __init__(self, imagePath, minConfidence):
-        TextDetection.__init__(self, imagePath);
+    def __init__(self, minConfidence, diagnostics=False):
+        TextDetection.__init__(self);
         self.minConfidence = minConfidence;
+        self.diagnostics = diagnostics;
 
+
+    def detectTexts(self, image, imageMeta):
         # set the new width and height and then determine the ratio in change
         # for both the width and height
         # NOTE: The EAST text detector only accepts image with dimensions of multiples of 32
-        (newW, newH) = (math.ceil(self.imageWidth/32) * 32, math.ceil(self.imageHeight/32) * 32)
-        self.ratioW = self.imageWidth / float(newW)
-        self.ratioH = self.imageHeight / float(newH)
+        (newW, newH) = (math.ceil(imageMeta["width"]/32) * 32, math.ceil(imageMeta["height"]/32) * 32)
+        imageMeta["ratioW"] = imageMeta["width"] / float(newW)
+        imageMeta["ratioH"] = imageMeta["height"] / float(newH)
 
-        # resize the image and grab the new image dimensions
-        self.image = cv.resize(self.image, (newW, newH))
-        (self.imageHeight, self.imageWidth) = self.image.shape[:2]
-
-
-    def detectTexts(self):
-        self.image = img_utils.gammaCorrection(self.image);
+        preprocessed = cv.resize(image, (newW, newH))
+        preprocessed = img_utils.gammaCorrection(preprocessed);
 
         # define the two output layer names for the EAST detector model that
         # we are interested -- the first is the output probabilities and the
@@ -48,7 +46,7 @@ class EASTTextDetection(TextDetection):
 
         # construct a blob from the image and then perform a forward pass of
         # the model to obtain the two output layer sets
-        blob = cv.dnn.blobFromImage(self.image, 1.0, (self.imageWidth, self.imageHeight),
+        blob = cv.dnn.blobFromImage(preprocessed, 1.0, (newW, newH),
                 (123.68, 116.78, 103.94), swapRB=True, crop=False)
         start = time.time()
         net.setInput(blob)
@@ -62,11 +60,12 @@ class EASTTextDetection(TextDetection):
         # apply non-maxima suppression to suppress weak, overlapping bounding
         # boxes
         boxes = non_max_suppression(np.array(rects), probs=confidences)
-        boxes = self.scaleBoundingBoxes(boxes);
+        boxes = self.scaleBoundingBoxes(boxes, imageMeta);
 
-        vis = self.drawTextRegions(boxes);
-        filename = 'east_detected_texts.{}'.format(self.imageExt);
-        img_utils.outputImage(vis, filename);
+        if self.diagnostics:
+            vis = self.drawTextRegions(image, boxes);
+            filename = 'east_detected_texts.{}'.format(imageMeta["ext"]);
+            img_utils.outputImage(vis, filename);
 
         return (boxes, confidences);
 
@@ -127,15 +126,15 @@ class EASTTextDetection(TextDetection):
         return (rects, confidences);
 
 
-    def scaleBoundingBoxes(self, boxes):
+    def scaleBoundingBoxes(self, boxes, imageMeta):
         scaledBoxes = []
         for (startX, startY, endX, endY) in boxes:
             # scale the bounding box coordinates based on the respective
             # ratios, since the boxes were obtained from the resized image
-            startX = int(startX * self.ratioW)
-            startY = int(startY * self.ratioH)
-            endX = int(endX * self.ratioW)
-            endY = int(endY * self.ratioH)
+            startX = int(startX * imageMeta["ratioW"])
+            startY = int(startY * imageMeta["ratioH"])
+            endX = int(endX * imageMeta["ratioW"])
+            endY = int(endY * imageMeta["ratioH"])
 
             scaledBoxes.append((startX, startY, endX, endY));
 
