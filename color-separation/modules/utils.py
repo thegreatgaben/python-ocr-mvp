@@ -8,7 +8,7 @@ def viewImage(image, windowTitle="Display"):
     cv2.destroyAllWindows()
 
 
-def getImages(path):
+def getImageFileNames(path):
     file_list = []
     for filename in os.listdir(path):
         if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".bmp"):
