@@ -1,26 +1,32 @@
 import cv2
 import numpy
-from modules.utils import getImageFileNames
+from modules.utils import getImageFileNames, viewImage, averageIntensityValue, smartInvert
 from modules.edge import cannyEdge
-from modules.hist import histBackProj
+from modules.hist import histBackProj, equalizeSaturation, showRGBHistogram
 from modules.thresh import otsu, otsu_multi_grey, otsu_multi_rgb
+from modules.color import simpleColorBalance, invert
 
 
-class ColorSepTests:
+class ColorSeparationEngine:
     def __init__(self):
         print('Color separation class initialised.')
         self.images = []
         self.originals = []
         self.cache = []
+        self.path = ''
 
     def loadImages(self, path):
+        self.path = path
         filenames = getImageFileNames(path)
         filenames.sort()
         for file in filenames:
             current_file = cv2.imread('{}/{}'.format(path, file))
             self.images.append(current_file)
         self.originals = self.images
-        print('{} images loaded'.format(len(filenames)))
+        print('{} images loaded from {}'.format(len(filenames), path))
+
+    def reloadImages(self):
+        self.loadImages(self.path)
 
     def setCache(self):
         self.cache = self.images
@@ -74,12 +80,15 @@ class ColorSepTests:
         for image in self.images:
             new_images.append(otsu(image))
         self.images = new_images
+        print('otsuThresh run on {} images'.format(len(self.images)))
 
     def otsuThreshMultiGrey(self, classes=3):
         new_images = []
         for image in self.images:
             new_images.append(otsu_multi_grey(image, classes))
         self.images = new_images
+        print('otsuThreshMultiGrey run on {} images (classes={})'.format(
+            len(self.images), classes))
 
     def otsuThreshMultiRGB(self, classes=3):
         new_images = []
@@ -87,11 +96,28 @@ class ColorSepTests:
             bgr = otsu_multi_rgb(image, classes)
             for channel in bgr:
                 new_images.append(channel)
+        print('otsuThreshMultiRGB run on {} images (classes={}). {} images produced.'.format(
+            len(self.images), classes, len(new_images)))
         self.images = new_images
 
+    def colorBalance(self, percent=10):
+        new_images = []
+        for image in self.images:
+            new_images.append(simpleColorBalance(image, percent))
+        self.images = new_images
+        print('colorBalance run on {} images (percent={})'.format(
+            len(self.images), percent))
 
-def edgeDetect1():
-    C = ColorSepTests()
+    def smartInvert(self):
+        new_images = []
+        for image in self.images:
+            new_images.append(smartInvert(image))
+        self.images = new_images
+        print('smartInverted {} images'.format(len(self.images)))
+
+
+def edgeDetect1():  # blur, canny edge detection
+    C = ColorSeparationEngine()
     C.loadImages('images')
     C.resize(2000, 2000)
     C.blur(6)
@@ -99,8 +125,8 @@ def edgeDetect1():
     C.writeOutput('output')
 
 
-def histBackProj1():
-    C = ColorSepTests()
+def histBackProj1():  # blur, histogram back projection
+    C = ColorSeparationEngine()
     C.loadImages('images')
     C.resize(2000, 2000)
     C.blur(6)
@@ -112,8 +138,8 @@ def histBackProj1():
         C.restoreFromCache()
 
 
-def multiOtsuTest1():
-    C = ColorSepTests()
+def multiOtsuTest1():  # greyscaled multi level otsu
+    C = ColorSeparationEngine()
     C.loadImages('images')
     C.resize(2000, 2000)
     C.blur(4)
@@ -121,13 +147,39 @@ def multiOtsuTest1():
     C.writeOutput('output')
 
 
-def multiOtsuTest2():
-    C = ColorSepTests()
+def multiOtsuTest2():  # RGB multi level otsu
+    C = ColorSeparationEngine()
     C.loadImages('images')
     C.blur(6)
     C.otsuThreshMultiRGB(3)
     C.writeOutput('output')
 
 
+def colorBalanceTest1(src):  # color balancing
+    img = cv2.imread(src)  # 'images/img1.jpg'
+    eq = simpleColorBalance(img, 10)
+    showRGBHistogram(img)
+    showRGBHistogram(eq)
+    viewImage(img)
+    viewImage(eq)
+
+
+def colorBalanceTest2():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
+    C.colorBalance()
+    C.writeOutput('output')
+
+
+def multiOtsuTest3():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
+    C.colorBalance()
+    C.blur(4)
+    C.otsuThreshMultiRGB(4)
+    C.smartInvert()
+    C.writeOutput('output')
+
+
 if __name__ == "__main__":
-    multiOtsuTest2()
+    multiOtsuTest3()

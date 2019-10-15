@@ -35,3 +35,4 @@ def hsvMask(image, hue_center, hue_var=15, sat_lo=80, sat_hi=255, val_lo=20, val
     masked_img = cv2.bitwise_and(hsv_img, hsv_img, mask=curr_mask)
     rgb_img = cv2.cvtColor(masked_img, cv2.COLOR_HSV2BGR)
     return rgb_img
+
