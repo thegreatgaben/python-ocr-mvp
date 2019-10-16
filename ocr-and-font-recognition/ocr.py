@@ -1,5 +1,6 @@
 import img_utils
 
+import os
 import cv2 as cv
 import pytesseract
 
@@ -8,7 +9,8 @@ class OCREngine:
     def __init__(self, language, padding=False, roiPadding=0.05, diagnostics=False):
         self.paddingEnabled = padding;
         self.roiPadding = roiPadding;
-        self.tesseractConfig = ("-l {} --oem 2 --psm 7".format(language));
+        tessDataPath = os.path.join(os.path.dirname(__file__), "big_assets/tesseract/training_data/");
+        self.tesseractConfig = ("-l {} --oem 1 --psm 7 --tessdata-dir {}".format(language, tessDataPath));
         self.diagnostics = diagnostics;
 
 
