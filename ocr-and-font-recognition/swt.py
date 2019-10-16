@@ -42,9 +42,9 @@ class SWTScrubber:
         '''
 
 
-    def scrubWithDerivative(self, edges, sobelx, sobely, theta):
+    def scrubWithDerivative(self, edges, sobelx, sobely, theta, darkOnBright=True):
         swtStart = time.clock();
-        swt = self._swt(theta, edges, sobelx, sobely)
+        swt = self._swt(theta, edges, sobelx, sobely, darkOnBright)
         swtEnd = time.clock() - swtStart;
 
         ccStart = time.clock();
@@ -77,20 +77,26 @@ class SWTScrubber:
         return (edges, sobelx64f, sobely64f, theta)
 
 
-    def _swt(self, theta, edges, sobelx64f, sobely64f):
+    def _swt(self, theta, edges, sobelx64f, sobely64f, darkOnBright):
         # create empty image, initialized to infinity
         swt = np.empty(theta.shape)
         swt[:] = np.Infinity
         rayList = []
 
-        # now iterate over pixels in image, checking Canny to see if we're on an edge.
-        # if we are, follow a normal a ray to either the next edge or image border
-        step_x_g = -1 * sobelx64f
-        step_y_g = -1 * sobely64f
+        # The direction in which we travel the gradient depends on the type of text
+        # we want to find. For dark text on light background, follow the opposite
+        # direction (into the dark area); for light text on dark background, follow
+        # the gradient as is.
+        gradientDirection = -1 if darkOnBright else 1;
+        step_x_g = gradientDirection * sobelx64f
+        step_y_g = gradientDirection * sobely64f
+
         mag_g = np.sqrt( step_x_g * step_x_g + step_y_g * step_y_g )
         grad_x_g = step_x_g / mag_g
         grad_y_g = step_y_g / mag_g
 
+        # now iterate over pixels in image, checking Canny to see if we're on an edge.
+        # if we are, follow a normal a ray to either the next edge or image border
         (imageHeight, imageWidth) = edges.shape[:2];
         (yIndices, xIndices) = np.nonzero(edges);
         for (y, x) in list(zip(yIndices, xIndices)):

@@ -149,8 +149,10 @@ class MSERTextDetection(TextDetection):
 
     def filterTextBySWT(self, preprocessed, boxes, imageMeta):
         filteredBoxes = [];
-        swt = SWTScrubber();
+        swt = SWTScrubber(diagnostics=True);
         (edges, sobelx, sobely, theta) = swt.create_derivative(preprocessed);
+
+        darkOnBright = img_utils.detectDarkOnBrightImage(preprocessed);
 
         i = 0;
         for (x1, y1, x2, y2) in boxes:
@@ -158,7 +160,8 @@ class MSERTextDetection(TextDetection):
                     edges[y1:y2, x1:x2],
                     sobelx[y1:y2, x1:x2],
                     sobely[y1:y2, x1:x2],
-                    theta[y1:y2, x1:x2]
+                    theta[y1:y2, x1:x2],
+                    darkOnBright
             );
             variances = [];
             for label,component in componentsMap.items():

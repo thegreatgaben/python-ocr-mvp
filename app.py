@@ -23,7 +23,6 @@ def main():
     global ocrEngine, textDetector;
     textDetector = MSERTextDetection();
     ocrEngine = OCREngine("eng", padding=True, roiPadding=0.025);
-    print(textDetector);
 
 
 def valid_file(filename):

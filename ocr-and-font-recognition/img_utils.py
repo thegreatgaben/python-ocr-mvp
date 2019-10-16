@@ -192,3 +192,32 @@ def detectAndCorrectOrientation(image, preprocessed, showResult=False):
     cv.destroyAllWindows();
     return rotated;
 
+
+def detectDarkOnBrightImage(image, intensityThresh=120):
+    # The given image must be a grayscale image only
+    assert len(image.shape) == 2;
+
+    (imageHeight, imageWidth) = image.shape[:2];
+    brightPxCount = 0;
+
+    # Traverse around the borders of the image and count
+    # the number of 'bright' pixels
+    for x in range(0, imageWidth):
+        if image[0, x] > intensityThresh:
+            brightPxCount += 1;
+        if image[imageHeight-1, x] > intensityThresh:
+            brightPxCount += 1;
+
+    for y in range(0, imageHeight):
+        if image[y, 0] > intensityThresh:
+            brightPxCount += 1;
+        if image[y, imageWidth-1] > intensityThresh:
+            brightPxCount += 1;
+
+    totalTraversed = ((imageWidth * 2) + (imageHeight * 2));
+    if brightPxCount > totalTraversed//2:
+        return True;
+    else:
+        return False;
+
+
