@@ -32,7 +32,7 @@ if __name__ == "__main__":
     imageMeta["height"] = imageHeight;
 
     if (args["mser"]):
-        mser = MSERTextDetection(diagnostics=True);
+        mser = MSERTextDetection();
         boxes = mser.detectTexts(image, imageMeta);
     elif (args["east"]):
         east = EASTTextDetection(minConfidence=args["min_confidence"]);

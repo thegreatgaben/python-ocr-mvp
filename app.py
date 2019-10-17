@@ -87,6 +87,7 @@ def ocr_endpoint():
 
     payload = {};
     payload["recognised_texts"] = results;
+    payload["textDetectionsURL"] = textDetector.getOutputFilePath(imageMeta["ext"]);
     response = jsonify(payload);
     response.headers.add('Access-Control-Allow-Origin', '*');
     return response, 200;

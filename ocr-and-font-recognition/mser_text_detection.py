@@ -13,6 +13,11 @@ class MSERTextDetection(TextDetection):
     def __init__(self, diagnostics=False):
         TextDetection.__init__(self);
         self.diagnostics = diagnostics;
+        self.outputFileName = "mser_detected_texts.{}";
+
+
+    def getOutputFilePath(self, ext):
+        return os.path.join(self.outputPath, self.outputFileName.format(ext));
 
 
     def detectTexts(self, image, imageMeta):
@@ -41,10 +46,9 @@ class MSERTextDetection(TextDetection):
         mappedBoxes = self.filterTextByGeometricProperties(blurred, mappedBoxes, imageMeta);
         mappedBoxes = self.filterTextBySWT(blurred, mappedBoxes, imageMeta);
 
-        if self.diagnostics:
-            vis = self.drawTextRegions(image, mappedBoxes);
-            filename = 'mser_detected_texts.{}'.format(imageMeta["ext"]);
-            img_utils.outputImage(vis, filename);
+        vis = self.drawTextRegions(image, mappedBoxes);
+        filename = self.outputFileName.format(imageMeta["ext"]);
+        img_utils.outputImage(vis, filename);
 
         return mappedBoxes;
 
