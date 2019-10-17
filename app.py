@@ -23,7 +23,6 @@ def main():
     global ocrEngine, textDetector;
     textDetector = MSERTextDetection();
     ocrEngine = OCREngine("eng", padding=True, roiPadding=0.025);
-    print(textDetector);
 
 
 def valid_file(filename):
@@ -88,6 +87,7 @@ def ocr_endpoint():
 
     payload = {};
     payload["recognised_texts"] = results;
+    payload["textDetectionsURL"] = textDetector.getOutputFilePath(imageMeta["ext"]);
     response = jsonify(payload);
     response.headers.add('Access-Control-Allow-Origin', '*');
     return response, 200;

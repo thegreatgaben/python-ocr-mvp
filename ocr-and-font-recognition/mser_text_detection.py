@@ -13,6 +13,11 @@ class MSERTextDetection(TextDetection):
     def __init__(self, diagnostics=False):
         TextDetection.__init__(self);
         self.diagnostics = diagnostics;
+        self.outputFileName = "mser_detected_texts.{}";
+
+
+    def getOutputFilePath(self, ext):
+        return os.path.join(self.outputPath, self.outputFileName.format(ext));
 
 
     def detectTexts(self, image, imageMeta):
@@ -41,10 +46,9 @@ class MSERTextDetection(TextDetection):
         mappedBoxes = self.filterTextByGeometricProperties(blurred, mappedBoxes, imageMeta);
         mappedBoxes = self.filterTextBySWT(blurred, mappedBoxes, imageMeta);
 
-        if self.diagnostics:
-            vis = self.drawTextRegions(image, mappedBoxes);
-            filename = 'mser_detected_texts.{}'.format(imageMeta["ext"]);
-            img_utils.outputImage(vis, filename);
+        vis = self.drawTextRegions(image, mappedBoxes);
+        filename = self.outputFileName.format(imageMeta["ext"]);
+        img_utils.outputImage(vis, filename);
 
         return mappedBoxes;
 
@@ -149,8 +153,10 @@ class MSERTextDetection(TextDetection):
 
     def filterTextBySWT(self, preprocessed, boxes, imageMeta):
         filteredBoxes = [];
-        swt = SWTScrubber();
+        swt = SWTScrubber(diagnostics=True);
         (edges, sobelx, sobely, theta) = swt.create_derivative(preprocessed);
+
+        darkOnBright = img_utils.detectDarkOnBrightImage(preprocessed);
 
         i = 0;
         for (x1, y1, x2, y2) in boxes:
@@ -158,7 +164,8 @@ class MSERTextDetection(TextDetection):
                     edges[y1:y2, x1:x2],
                     sobelx[y1:y2, x1:x2],
                     sobely[y1:y2, x1:x2],
-                    theta[y1:y2, x1:x2]
+                    theta[y1:y2, x1:x2],
+                    darkOnBright
             );
             variances = [];
             for label,component in componentsMap.items():

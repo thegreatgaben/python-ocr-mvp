@@ -5,6 +5,8 @@ class TextDetection:
 
     def __init__(self):
         self.mainDir = os.path.dirname(__file__)
+        parentDir = os.path.basename(os.path.dirname(__file__));
+        self.outputPath = os.path.join(parentDir, 'test/output');
 
 
     def detectTexts(self):
