@@ -1,9 +1,10 @@
 import cv2
 import numpy
+import copy
 from modules.utils import getImageFileNames, viewImage, averageIntensityValue, smartInvert
 from modules.edge import cannyEdge
 from modules.hist import histBackProj, equalizeSaturation, showRGBHistogram
-from modules.thresh import otsu, otsu_multi_grey, otsu_multi_rgb
+from modules.thresh import otsu, otsu_multi_grey, otsu_multi_rgb, otsu_multi_rgb2, otsu_multi_hsv
 from modules.color import simpleColorBalance, invert
 
 
@@ -29,10 +30,10 @@ class ColorSeparationEngine:
         self.loadImages(self.path)
 
     def setCache(self):
-        self.cache = self.images
+        self.cache = copy.deepcopy(self.images)
 
     def restoreFromCache(self):
-        self.images = self.cache
+        self.images = copy.deepcopy(self.cache)
 
     def clearCache(self):
         self.cache = []
@@ -97,6 +98,26 @@ class ColorSeparationEngine:
             for channel in bgr:
                 new_images.append(channel)
         print('otsuThreshMultiRGB run on {} images (classes={}). {} images produced.'.format(
+            len(self.images), classes, len(new_images)))
+        self.images = new_images
+
+    def otsuThreshMultiRGBv2(self, classes=3):
+        new_images = []
+        for image in self.images:
+            bgr = otsu_multi_rgb2(image, classes)
+            for channel in bgr:
+                new_images.append(channel)
+        print('otsuThreshMultiRGBv2 run on {} images (classes={}). {} images produced.'.format(
+            len(self.images), classes, len(new_images)))
+        self.images = new_images
+
+    def otsuThreshMultiHSV(self, classes=3, threshold=True):
+        new_images = []
+        for image in self.images:
+            bgr = otsu_multi_hsv(image, classes, threshold)
+            for channel in bgr:
+                new_images.append(channel)
+        print('otsuThreshMultiHSV run on {} images (classes={}). {} images produced.'.format(
             len(self.images), classes, len(new_images)))
         self.images = new_images
 
@@ -174,12 +195,92 @@ def colorBalanceTest2():
 def multiOtsuTest3():
     C = ColorSeparationEngine()
     C.loadImages('images')
+    # C.colorBalance()
+    C.blur(4)
+    C.otsuThreshMultiRGB(2)
+    # C.smartInvert()
+    C.writeOutput('output')
+
+
+def multiOtsuTest4():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
     C.colorBalance()
     C.blur(4)
-    C.otsuThreshMultiRGB(4)
+    C.otsuThreshMultiRGBv2(2)
     C.smartInvert()
     C.writeOutput('output')
 
 
+def multiOtsuTest5():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
+    C.colorBalance()
+    C.blur(4)
+    C.otsuThreshMultiHSV(2)
+    C.writeOutput('output2c-4b')
+
+
+def multiOtsuTest5p5():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
+    C.colorBalance()
+    C.otsuThreshMultiHSV(2)
+    C.writeOutput('output2c-0b')
+
+
+def multiOtsuTest6():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
+    C.colorBalance()
+    C.otsuThreshMultiHSV(3, False)
+    C.writeOutput('output-nt')
+
+
+def multiOtsuTest7():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
+    C.colorBalance()
+    C.blur(20)
+    C.otsuThreshMultiHSV(2)
+    C.writeOutput('output2c-20b')
+
+
+def multiOtsuTest8():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
+    C.colorBalance()
+    C.blur(20)
+    C.otsuThreshMultiRGB(2)
+    C.smartInvert()
+    C.writeOutput('output2c-20b-nc')
+
+
+def multiOtsuTest9():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
+    C.colorBalance()
+    C.blur(4)
+    C.otsuThreshMultiRGB(2)
+    C.smartInvert()
+    C.writeOutput('output2c-4b-nc')
+
+
+def multiOtsuTest10():
+    C = ColorSeparationEngine()
+    C.loadImages('images')
+    C.colorBalance()
+    C.blur(4)
+    C.otsuThreshMultiRGB(3)
+    C.smartInvert()
+    C.writeOutput('output3c-4b-nc')
+
+
 if __name__ == "__main__":
-    multiOtsuTest3()
+    multiOtsuTest5()
+    multiOtsuTest5p5()
+    multiOtsuTest6()
+    multiOtsuTest7()
+    multiOtsuTest8()
+    multiOtsuTest9()
+    multiOtsuTest10()
