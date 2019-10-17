@@ -55,3 +55,28 @@ def simpleColorBalance(img, percent=1):
 
 def invert(image):
     return (255-image)
+
+
+def RGB2CMYK(rgb):
+    r_p = rgb[0]/255
+    g_p = rgb[1]/255
+    b_p = rgb[2]/255
+    k = 1 - max(r_p, g_p, b_p)
+    if float(k) == 1.0:
+        return (0, 0, 0, 100)
+    c = round((max(1 - r_p - k, 0) / (1 - k)) * 100)
+    m = round((max(1 - g_p - k, 0) / (1 - k)) * 100)
+    y = round((max(1 - b_p - k, 0) / (1 - k)) * 100)
+    k = round(k * 100)
+    return (c, m, y, k)
+
+
+def CMYK2RGB(cmyk):
+    c = cmyk[0]
+    m = cmyk[1]
+    y = cmyk[2]
+    k = cmyk[3]
+    r = round(255 * (1 - (c / 100)) * (1 - (k / 100)))
+    g = round(255 * (1 - (m / 100)) * (1 - (k / 100)))
+    b = round(255 * (1 - (y / 100)) * (1 - (k / 100)))
+    return (r, g, b)
