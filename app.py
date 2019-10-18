@@ -76,6 +76,10 @@ def ocr_endpoint():
     if image.shape[0] == 0:
         return "NO IMAGE UPLOADED", 400;
 
+    # For a grayscale/single channel image that is uploaded
+    if len(image.shape) == 2:
+        image = cv.merge((image, image, image));
+
     languages = request.form.get("lang");
     if languages is None:
         return "NO LANGUAGE(S) SPECIFIED", 400;
