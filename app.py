@@ -85,13 +85,16 @@ def ocr_endpoint():
     imageMeta["ext"] = filename.split('.')[1];
     imageMeta["width"] = imageWidth;
     imageMeta["height"] = imageHeight;
+    imageMeta["filename"] = filename;
 
-    boxes = textDetector.detectTexts(image, imageMeta);
+    outputFileName = "{}_{}_texts.{}".format(filename.split('.')[0], languages, imageMeta["ext"]);
+    boxes = textDetector.detectTexts(image, imageMeta, outputFileName);
     results = ocrEngine.performOCR(image, boxes, imageMeta, languages);
 
     payload = {};
     payload["recognised_texts"] = results;
-    payload["textDetectionsURL"] = textDetector.getOutputFilePath(imageMeta["ext"]);
+    payload["filename"] = outputFileName;
+    payload["textDetectionsURL"] = textDetector.getOutputFilePath(outputFileName);
     response = jsonify(payload);
     response.headers.add('Access-Control-Allow-Origin', '*');
     return response, 200;

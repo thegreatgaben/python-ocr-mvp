@@ -13,14 +13,13 @@ class MSERTextDetection(TextDetection):
     def __init__(self, diagnostics=False):
         TextDetection.__init__(self);
         self.diagnostics = diagnostics;
-        self.outputFileName = "mser_detected_texts.{}";
 
 
-    def getOutputFilePath(self, ext):
-        return os.path.join(self.outputPath, self.outputFileName.format(ext));
+    def getOutputFilePath(self, filename):
+        return os.path.join(self.outputPath, filename);
 
 
-    def detectTexts(self, image, imageMeta):
+    def detectTexts(self, image, imageMeta, outputFileName):
         mser = cv.MSER_create()
 
         # Preprocessing
@@ -47,8 +46,7 @@ class MSERTextDetection(TextDetection):
         # mappedBoxes = self.filterTextBySWT(blurred, mappedBoxes, imageMeta);
 
         vis = self.drawTextRegions(image, mappedBoxes);
-        filename = self.outputFileName.format(imageMeta["ext"]);
-        img_utils.outputImage(vis, filename);
+        img_utils.outputImage(vis, outputFileName);
 
         return mappedBoxes;
 

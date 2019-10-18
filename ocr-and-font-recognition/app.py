@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     if (args["mser"]):
         mser = MSERTextDetection();
-        boxes = mser.detectTexts(image, imageMeta);
+        boxes = mser.detectTexts(image, imageMeta, "mser_detected_texts.{}".format(imageMeta["ext"]));
     elif (args["east"]):
         east = EASTTextDetection(minConfidence=args["min_confidence"]);
         (boxes, confidences) = east.detectTexts(image, imageMeta);
