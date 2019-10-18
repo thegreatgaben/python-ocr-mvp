@@ -29,7 +29,7 @@ def equalizeSaturation(image):
     h = hsv[:, :, 0]
     s = hsv[:, :, 1]
     v = hsv[:, :, 2]
-    cv2.equalizeHist(h, h)
+    cv2.equalizeHist(s, s)
     hsv = cv2.merge((h, s, v))
     bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return bgr

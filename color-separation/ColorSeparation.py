@@ -1,10 +1,10 @@
 import cv2
-import numpy
-import copy
+import numpy as np
+from copy import deepcopy
 from modules.utils import getImageFileNames, viewImage, averageIntensityValue, smartInvert
 from modules.edge import cannyEdge
 from modules.hist import histBackProj, equalizeSaturation, showRGBHistogram
-from modules.thresh import otsu, otsu_multi_grey, otsu_multi_rgb, otsu_multi_rgb2, otsu_multi_hsv
+from modules.thresh import otsu, otsu_multiclass_grey, otsu_multiclass_hsv, otsu_multiclass_rgb
 from modules.color import simpleColorBalance, invert
 
 
@@ -30,10 +30,10 @@ class ColorSeparationEngine:
         self.loadImages(self.path)
 
     def setCache(self):
-        self.cache = copy.deepcopy(self.images)
+        self.cache = deepcopy(self.images)
 
     def restoreFromCache(self):
-        self.images = copy.deepcopy(self.cache)
+        self.images = deepcopy(self.cache)
 
     def clearCache(self):
         self.cache = []
@@ -57,7 +57,8 @@ class ColorSeparationEngine:
             new_images.append(cv2.blur(image, (blur_size, blur_size)))
         self.images = new_images
         print('{} images blurred (blur_size={})'.format(
-            len(self.images), blur_size))
+            len(self.images), blur_size
+        ))
 
     def histBackProjection(self, bins=10):
         new_images = []
@@ -65,7 +66,8 @@ class ColorSeparationEngine:
             new_images.append(histBackProj(image, bins)[0])
         self.images = new_images
         print('Histogram back projection run on {} images ({} bins)'.format(
-            len(self.images), bins))
+            len(self.images), bins
+        ))
 
     def edgeDetection(self, t1=20, t2=40):
         new_images = []
@@ -74,7 +76,8 @@ class ColorSeparationEngine:
             new_images.append(out_img)
         self.images = new_images
         print('edgeDetection run on {} images (t1={}, t2={})'.format(
-            len(self.images), t1, t2))
+            len(self.images), t1, t2
+        ))
 
     def otsuThresh(self):
         new_images = []
@@ -83,42 +86,42 @@ class ColorSeparationEngine:
         self.images = new_images
         print('otsuThresh run on {} images'.format(len(self.images)))
 
-    def otsuThreshMultiGrey(self, classes=3):
+    def otsuThreshMultiGrey(self, classes=2):
         new_images = []
         for image in self.images:
-            new_images.append(otsu_multi_grey(image, classes))
+            new_images.append(otsu_multiclass_grey(image, classes))
         self.images = new_images
         print('otsuThreshMultiGrey run on {} images (classes={})'.format(
             len(self.images), classes))
 
-    def otsuThreshMultiRGB(self, classes=3):
+    def otsuThreshMultiRGB(self, classes=2):
         new_images = []
         for image in self.images:
-            bgr = otsu_multi_rgb(image, classes)
+            bgr = otsu_multiclass_rgb(image, classes)
             for channel in bgr:
                 new_images.append(channel)
         print('otsuThreshMultiRGB run on {} images (classes={}). {} images produced.'.format(
             len(self.images), classes, len(new_images)))
         self.images = new_images
 
-    def otsuThreshMultiRGBv2(self, classes=3):
+    def otsuThreshMultiHSV(self, classes=2, threshold=True, hues=[(115, 35), (55, 35), (0, 35)], colorize=False):
         new_images = []
         for image in self.images:
-            bgr = otsu_multi_rgb2(image, classes)
-            for channel in bgr:
-                new_images.append(channel)
-        print('otsuThreshMultiRGBv2 run on {} images (classes={}). {} images produced.'.format(
-            len(self.images), classes, len(new_images)))
-        self.images = new_images
-
-    def otsuThreshMultiHSV(self, classes=3, threshold=True):
-        new_images = []
-        for image in self.images:
-            bgr = otsu_multi_hsv(image, classes, threshold)
-            for channel in bgr:
-                new_images.append(channel)
+            bgr = otsu_multiclass_hsv(image, classes, threshold, hues)
+            print(len(bgr))
+            if (len(bgr) > 0):
+                zeros = np.zeros(np.shape(bgr[0]), dtype=np.uint8)
+                for i in range(len(bgr)):
+                    if (len(bgr) == 3 and colorize):
+                        pre_merge = [zeros] * len(bgr)
+                        pre_merge[i] = bgr[i]
+                        colorized = cv2.merge(tuple(pre_merge))
+                        new_images.append(colorized)
+                    else:
+                        new_images.append(bgr[i])
         print('otsuThreshMultiHSV run on {} images (classes={}). {} images produced.'.format(
-            len(self.images), classes, len(new_images)))
+            len(self.images), classes, len(new_images)
+        ))
         self.images = new_images
 
     def colorBalance(self, percent=10):
@@ -127,7 +130,8 @@ class ColorSeparationEngine:
             new_images.append(simpleColorBalance(image, percent))
         self.images = new_images
         print('colorBalance run on {} images (percent={})'.format(
-            len(self.images), percent))
+            len(self.images), percent
+        ))
 
     def smartInvert(self):
         new_images = []
