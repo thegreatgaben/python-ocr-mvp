@@ -54,6 +54,12 @@ def decode_img(file):
     img = cv.imdecode(imgbuf, cv.IMREAD_UNCHANGED);
     return img;
 
+def createErrorResponse(message, code):
+    payload = {};
+    payload["error_message"] = message;
+    payload["http_code"] = code;
+    return jsonify(payload), code;
+
 
 @app.route("/")
 def hello_world():
@@ -74,7 +80,7 @@ def method_not_allowed(error):
 def ocr_endpoint():
     image, filename = handle_file_upload(request);
     if image.shape[0] == 0:
-        return "NO IMAGE UPLOADED", 400;
+        return createErrorResponse("NO IMAGE UPLOADED", 400);
 
     # For a grayscale/single channel image that is uploaded
     if len(image.shape) == 2:
@@ -82,7 +88,7 @@ def ocr_endpoint():
 
     languages = request.form.get("lang");
     if languages is None:
-        return "NO LANGUAGE(S) SPECIFIED", 400;
+        return createErrorResponse("NO LANGUAGE(S) SPECIFIED", 400);
 
     (imageHeight, imageWidth) = image.shape[:2];
     imageMeta = {};
