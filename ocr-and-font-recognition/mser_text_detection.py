@@ -43,7 +43,7 @@ class MSERTextDetection(TextDetection):
         mappedBoxes = img_utils.non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
 
         mappedBoxes = self.filterTextByGeometricProperties(blurred, mappedBoxes, imageMeta);
-        # mappedBoxes = self.filterTextBySWT(blurred, mappedBoxes, imageMeta);
+        mappedBoxes = self.filterTextBySWT(blurred, mappedBoxes, imageMeta);
 
         vis = self.drawTextRegions(image, mappedBoxes);
         img_utils.outputImage(vis, outputFileName);
