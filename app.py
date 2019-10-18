@@ -22,9 +22,7 @@ def main():
     # All things global should be defined here
     global ocrEngine, textDetector;
     textDetector = MSERTextDetection();
-
-    languages = "eng+chi_sim+khm+tha+vie"
-    ocrEngine = OCREngine(languages, padding=True, roiPadding=0.025);
+    ocrEngine = OCREngine(padding=True, roiPadding=0.025);
 
 
 def valid_file(filename):
@@ -76,7 +74,11 @@ def method_not_allowed(error):
 def ocr_endpoint():
     image, filename = handle_file_upload(request);
     if image.shape[0] == 0:
-        return "400 BAD REQUEST", 400;
+        return "NO IMAGE UPLOADED", 400;
+
+    languages = request.form.get("lang");
+    if languages is None:
+        return "NO LANGUAGE(S) SPECIFIED", 400;
 
     (imageHeight, imageWidth) = image.shape[:2];
     imageMeta = {};
@@ -85,7 +87,7 @@ def ocr_endpoint():
     imageMeta["height"] = imageHeight;
 
     boxes = textDetector.detectTexts(image, imageMeta);
-    results = ocrEngine.performOCR(image, boxes, imageMeta);
+    results = ocrEngine.performOCR(image, boxes, imageMeta, languages);
 
     payload = {};
     payload["recognised_texts"] = results;

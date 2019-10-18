@@ -6,19 +6,21 @@ import pytesseract
 
 class OCREngine:
 
-    def __init__(self, language, padding=False, roiPadding=0.05, diagnostics=False):
+    def __init__(self, padding=False, roiPadding=0.05, diagnostics=False):
         self.paddingEnabled = padding;
         self.roiPadding = roiPadding;
-        tessDataPath = os.path.join(os.path.dirname(__file__), "big_assets/tesseract/training_data/");
-        self.tesseractConfig = ("-l {} --oem 1 --psm 7 --tessdata-dir {}".format(language, tessDataPath));
+        self.tessDataPath = os.path.join(os.path.dirname(__file__), "big_assets/tesseract/training_data/");
+        self.tesseractConfig = "-l {} --oem 1 --psm 7 --tessdata-dir {}";
         self.diagnostics = diagnostics;
 
 
-    def performOCR(self, image, boxes, imageMeta, showResult=False):
+    def performOCR(self, image, boxes, imageMeta, languages="eng", showResult=False):
         gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY);
 
         recognisedTexts = [];
         index = 0;
+
+        tessConfig = self.tesseractConfig.format(languages, self.tessDataPath);
         for (startX, startY, endX, endY) in boxes:
             if self.paddingEnabled:
                 # in order to obtain a better OCR of the text we can potentially
@@ -47,7 +49,7 @@ class OCREngine:
 
             finalTextImage = binTextImage;
 
-            text = pytesseract.image_to_string(finalTextImage, config=self.tesseractConfig);
+            text = pytesseract.image_to_string(finalTextImage, config=tessConfig);
             if text != '':
                 print(text);
                 recognisedTexts.append(text);
