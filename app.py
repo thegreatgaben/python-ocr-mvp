@@ -22,7 +22,9 @@ def main():
     # All things global should be defined here
     global ocrEngine, textDetector;
     textDetector = MSERTextDetection();
-    ocrEngine = OCREngine("eng", padding=True, roiPadding=0.025);
+
+    languages = "eng+chi_sim+khm+tha+vie"
+    ocrEngine = OCREngine(languages, padding=True, roiPadding=0.025);
 
 
 def valid_file(filename):
