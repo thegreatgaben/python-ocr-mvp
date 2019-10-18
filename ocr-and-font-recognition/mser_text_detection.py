@@ -44,7 +44,7 @@ class MSERTextDetection(TextDetection):
         mappedBoxes = img_utils.non_max_suppression_fast(np.array(mappedBoxes), overlapThresh=0.3);
 
         mappedBoxes = self.filterTextByGeometricProperties(blurred, mappedBoxes, imageMeta);
-        mappedBoxes = self.filterTextBySWT(blurred, mappedBoxes, imageMeta);
+        # mappedBoxes = self.filterTextBySWT(blurred, mappedBoxes, imageMeta);
 
         vis = self.drawTextRegions(image, mappedBoxes);
         filename = self.outputFileName.format(imageMeta["ext"]);
@@ -148,12 +148,14 @@ class MSERTextDetection(TextDetection):
 
             filteredBoxes.append([x1, y1, x2, y2]);
 
+        cv.destroyAllWindows();
+
         return filteredBoxes;
 
 
     def filterTextBySWT(self, preprocessed, boxes, imageMeta):
         filteredBoxes = [];
-        swt = SWTScrubber(diagnostics=True);
+        swt = SWTScrubber();
         (edges, sobelx, sobely, theta) = swt.create_derivative(preprocessed);
 
         darkOnBright = img_utils.detectDarkOnBrightImage(preprocessed);

@@ -28,7 +28,7 @@ class SWTScrubber:
 
     def scrub(self, image):
         canny, sobelx, sobely, theta = self.create_derivative(image)
-        swt = self._swt(theta, canny, sobelx, sobely)
+        swt = self.applySWT(canny, sobelx, sobely, theta)
         shapes = self._connect_components(swt)
         return (swt, shapes);
         '''
@@ -44,7 +44,7 @@ class SWTScrubber:
 
     def scrubWithDerivative(self, edges, sobelx, sobely, theta, darkOnBright=True):
         swtStart = time.clock();
-        swt = self._swt(theta, edges, sobelx, sobely, darkOnBright)
+        swt = self.applySWT(edges, sobelx, sobely, theta, darkOnBright)
         swtEnd = time.clock() - swtStart;
 
         ccStart = time.clock();
@@ -63,8 +63,8 @@ class SWTScrubber:
         edges = cv.Canny(image, 130, 180)
 
         # Create gradient map using Sobel
-        sobelx64f = cv.Sobel(image, cv.CV_64F,1,0,ksize=-1)
-        sobely64f = cv.Sobel(image, cv.CV_64F,0,1,ksize=-1)
+        sobelx64f = cv.Sobel(image, cv.CV_64F,1,0,ksize=cv.FILTER_SCHARR)
+        sobely64f = cv.Sobel(image, cv.CV_64F,0,1,ksize=cv.FILTER_SCHARR)
 
         theta = np.arctan2(sobely64f, sobelx64f)
         if self.diagnostics:
@@ -77,7 +77,7 @@ class SWTScrubber:
         return (edges, sobelx64f, sobely64f, theta)
 
 
-    def _swt(self, theta, edges, sobelx64f, sobely64f, darkOnBright):
+    def applySWT(self, edges, sobelx64f, sobely64f, theta, darkOnBright):
         # create empty image, initialized to infinity
         swt = np.empty(theta.shape)
         swt[:] = np.Infinity
@@ -109,34 +109,36 @@ class SWTScrubber:
                 cur_x = math.floor(x + grad_x * i)
                 cur_y = math.floor(y + grad_y * i)
 
-                if cur_x != prev_x or cur_y != prev_y:
-                    # Reached past image boundaries
-                    if cur_x < 0 or cur_x >= imageWidth or cur_y < 0 or cur_y >= imageHeight:
-                        break;
+                if cur_x == prev_x and cur_y == prev_y:
+                    continue;
 
-                    # found edge,
-                    if edges[cur_y, cur_x] > 0:
-                        ray.append((cur_x, cur_y))
-                        theta_point = theta[y, x]
-                        alpha = theta[cur_y, cur_x]
+                # Reached past image boundaries
+                if cur_x < 0 or cur_x >= imageWidth or cur_y < 0 or cur_y >= imageHeight:
+                    break;
 
-                        ratio = grad_x * -grad_x_g[cur_y, cur_x] + grad_y * -grad_y_g[cur_y, cur_x];
-                        if ratio > 1.0:
-                            ratio = 1.0;
-                        elif ratio < -1.0:
-                            ratio = -1.0;
-
-                        # Check that the gradient direction of the newly found edge pixel (q) is roughly opposite
-                        # to the current edge pixel (p)
-                        if math.acos(ratio) < np.pi/2.0:
-                            thickness = math.sqrt( (cur_x - x) * (cur_x - x) + (cur_y - y) * (cur_y - y) )
-                            for (rp_x, rp_y) in ray:
-                                swt[rp_y, rp_x] = min(thickness, swt[rp_y, rp_x])
-                            rayList.append(ray)
-                        break
+                # found edge,
+                if edges[cur_y, cur_x] > 0:
                     ray.append((cur_x, cur_y))
-                    prev_x = cur_x
-                    prev_y = cur_y
+                    theta_point = theta[y, x]
+                    alpha = theta[cur_y, cur_x]
+
+                    ratio = grad_x * -grad_x_g[cur_y, cur_x] + grad_y * -grad_y_g[cur_y, cur_x];
+                    if ratio > 1.0:
+                        ratio = 1.0;
+                    elif ratio < -1.0:
+                        ratio = -1.0;
+
+                    # Check that the gradient direction of the newly found edge pixel (q) is roughly opposite
+                    # to the current edge pixel (p)
+                    if math.acos(ratio) < np.pi/2.0:
+                        strokeWidth = math.sqrt( (cur_x - x) * (cur_x - x) + (cur_y - y) * (cur_y - y) )
+                        for (rp_x, rp_y) in ray:
+                            swt[rp_y, rp_x] = min(strokeWidth, swt[rp_y, rp_x])
+                        rayList.append(ray)
+                    break
+                ray.append((cur_x, cur_y))
+                prev_x = cur_x
+                prev_y = cur_y
 
         # Compute median SWT
         for ray in rayList:
