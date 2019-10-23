@@ -24,23 +24,14 @@ def otsu_multiclass_grey(img, classes=2):
     return regions
 
 
-def otsu_multiclass_rgb(img, classes=2, color_sensitive=True):
-    if (color_sensitive):
-        b, g, r = cv2.split(img)
-        bgr = [b, g, r]
-        for i in range(len(bgr)):
-            thresholds = threshold_multiotsu(bgr[i], classes)
-            regions = np.digitize(bgr[i], thresholds)
-            regions = np.array(regions * 255, dtype=np.uint8)
-            bgr[i] = cv2.equalizeHist(regions)
-    else:
-        grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        regions = np.digitize(img, thresholds)
-        b, g, r = cv2.split(regions)
-        bgr = [b, g, r]
-        for i in range(len(bgr)):
-            bgr[i] = np.array(bgr[i] * 255, dtype=np.uint8)
-            bgr[i] = cv2.equalizeHist(bgr[i])
+def otsu_multiclass_rgb(img, classes=2):
+    b, g, r = cv2.split(img)
+    bgr = [b, g, r]
+    for i in range(len(bgr)):
+        thresholds = threshold_multiotsu(bgr[i], classes)
+        regions = np.digitize(bgr[i], thresholds)
+        regions = np.array(regions * 255, dtype=np.uint8)
+        bgr[i] = cv2.equalizeHist(regions)
     return bgr
 
 
