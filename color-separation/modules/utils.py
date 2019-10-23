@@ -2,6 +2,7 @@ import cv2
 import os
 from skimage import io, img_as_float
 import numpy as np
+import glob
 
 
 def viewImage(image, windowTitle="Display"):
@@ -24,6 +25,19 @@ def averageIntensityValue(image):
     image = img_as_float(image)
     return np.mean(image)
 
+def deleteAllItems(path):
+    if (path[-1] != '/'):
+        path += '/'
+    files = glob.glob(path + '*')
+    for f in files:
+        os.remove(f)
+
+def deleteAllBitmaps(path):
+    if (path[-1] != '/'):
+        path += '/'
+    files = glob.glob(path + '*.bmp')
+    for f in files:
+        os.remove(f)
 
 def smartInvert(image):
     if (averageIntensityValue(image) >= 0.5):

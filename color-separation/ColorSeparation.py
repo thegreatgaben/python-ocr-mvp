@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from copy import deepcopy
-from modules.utils import getImageFileNames, viewImage, averageIntensityValue, smartInvert
+from modules.utils import getImageFileNames, viewImage, averageIntensityValue, smartInvert, deleteAllItems, deleteAllBitmaps
 from modules.edge import cannyEdge
 from modules.hist import histBackProj, equalizeSaturation, showRGBHistogram
 from modules.thresh import otsu, otsu_multiclass_grey, otsu_multiclass_hsv, otsu_multiclass_rgb
@@ -15,6 +15,13 @@ class ColorSeparationEngine:
         self.originals = []
         self.cache = []
         self.path = ''
+
+    def getImagePaths(self, path):
+        filenames = getImageFileNames(path)
+        filenames.sort()
+        for i in range(len(filenames)):
+            filenames[i] = path + '/' + filenames[i]
+        return filenames
 
     def loadImages(self, path):
         self.path = path
@@ -37,6 +44,9 @@ class ColorSeparationEngine:
 
     def clearCache(self):
         self.cache = []
+
+    def clearFolder(self, path):
+        deleteAllBitmaps(path)
 
     def writeOutput(self, out_path):
         for i in range(len(self.images)):
