@@ -15,6 +15,11 @@ from ColorSeparation import ColorSeparationEngine
 from ocr import OCREngine
 
 app = Flask(__name__)
+'''
+For local server...
+app = Flask(__name__, static_url_path='',
+            static_folder='.',)
+'''
 app.config["ALLOWED_EXTENSIONS"] = set(['png', 'jpg', 'jpeg'])
 
 global ocrEngine, textDetector, csEngine
@@ -107,7 +112,9 @@ def ocr_endpoint():
     results = ocrEngine.performOCR(image, boxes, imageMeta, languages)
 
     payload = {}
-    payload["recognised_texts"] = results
+    payload["imageWidth"] = imageWidth;
+    payload["imageHeight"] = imageHeight;
+    payload["recognisedTexts"] = results
     payload["filename"] = outputFileName
     payload["textDetectionsURL"] = textDetector.getOutputFilePath(
         outputFileNameWithExt)
