@@ -15,6 +15,7 @@ class ColorSeparationEngine:
         self.originals = []
         self.cache = []
         self.path = ''
+        self.writeFormat = 'bmp'
 
     def getImagePaths(self, path):
         filenames = getImageFileNames(path)
@@ -33,6 +34,12 @@ class ColorSeparationEngine:
         self.originals = self.images
         print('{} images loaded from {}'.format(len(filenames), path))
 
+    def loadImage(self, path):
+        self.path = path
+        self.images = [cv2.imread(path)]
+        self.originals = self.images
+        print('{} loaded.'.format(path))
+
     def reloadImages(self):
         self.loadImages(self.path)
 
@@ -50,10 +57,18 @@ class ColorSeparationEngine:
 
     def writeOutput(self, out_path):
         for i in range(len(self.images)):
-            cv2.imwrite("{}/{}.bmp".format(out_path, i), self.images[i])
+            print(i)
+            cv2.imwrite("{}/{}.{}".format(out_path, i, self.writeFormat), self.images[i])
         print('{} images written to ./{}'.format(len(self.images), out_path))
 
-    def resize(self, w=400, h=400):
+    def writeOutputCollate(self, out_path):
+        existingFilenames = getImageFileNames(out_path)
+        for i in range(len(existingFileNames), len(existingFileNames) + len(self.images)):
+            cv2.imwrite("{}/{}.{}".format(out_path, i, self.writeFormat), self.images[i])
+        print('{} images written to ./{}'.format(len(self.images), out_path))
+        pass
+
+    def resize(self, w=640, h=640):
         new_images = []
         for image in self.images:
             resized = cv2.resize(image, (w, h))
@@ -118,7 +133,6 @@ class ColorSeparationEngine:
         new_images = []
         for image in self.images:
             bgr = otsu_multiclass_hsv(image, classes, threshold, hues)
-            print(len(bgr))
             if (len(bgr) > 0):
                 zeros = np.zeros(np.shape(bgr[0]), dtype=np.uint8)
                 for i in range(len(bgr)):
@@ -149,3 +163,10 @@ class ColorSeparationEngine:
             new_images.append(smartInvert(image))
         self.images = new_images
         print('smartInverted {} images'.format(len(self.images)))
+
+# csEngine = ColorSeparationEngine()
+# csEngine.loadImage('images/img2.jpg')
+# csEngine.colorBalance(10)
+# csEngine.blur(4)
+# csEngine.otsuThreshMultiHSV(2,colorize=True, hues=[(115,30),(55,35),(0,35)])
+# csEngine.writeOutput('outputs')

@@ -127,7 +127,7 @@ def color_separation_endpoint():
     csEngine.images = [image]
     csEngine.colorBalance(10)
     csEngine.blur(4)
-    csEngine.otsuThreshMultiRGB(2)
+    csEngine.otsuThreshMultiHSV(2,colorize=True, hues=[(115,30),(55,35),(0,35)])
     csEngine.writeOutput(outpath)
     imagePaths = csEngine.getImagePaths(outpath)
 
