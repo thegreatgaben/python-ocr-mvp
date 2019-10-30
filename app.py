@@ -123,6 +123,7 @@ def color_separation_endpoint():
         return createErrorResponse("NO IMAGE UPLOADED", 400)
 
     outpath = 'color-separation/outputs'
+    csEngine.writeFormat = 'jpg'
     csEngine.clearFolder(outpath)
     csEngine.images = [image]
     csEngine.colorBalance(10)
