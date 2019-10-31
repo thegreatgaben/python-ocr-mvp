@@ -13,11 +13,14 @@ sys.path.append("./ocr-and-font-recognition/")
 from mser_text_detection import MSERTextDetection
 from ColorSeparation import ColorSeparationEngine
 from ocr import OCREngine
+from img_utils import outputImage
 
 app = Flask(__name__)
 # For local server...
-# app = Flask(__name__, static_url_path='',
-            # static_folder='.',)
+'''
+app = Flask(__name__, static_url_path='',
+            static_folder='.',)
+'''
 
 app.config["ALLOWED_EXTENSIONS"] = set(['png', 'jpg', 'jpeg'])
 
@@ -110,11 +113,14 @@ def ocr_endpoint():
     boxes = textDetector.detectTexts(image, imageMeta, outputFileNameWithExt)
     results = ocrEngine.performOCR(image, boxes, imageMeta, languages)
 
+    origImgPath = outputImage(image, filename);
+
     payload = {}
     payload["imageWidth"] = imageWidth;
     payload["imageHeight"] = imageHeight;
     payload["recognisedTexts"] = results
     payload["filename"] = outputFileName
+    payload["originalImageURL"] = origImgPath;
     payload["textDetectionsURL"] = textDetector.getOutputFilePath(
         outputFileNameWithExt)
     response = jsonify(payload)
@@ -138,13 +144,12 @@ def color_separation_endpoint():
     # output writing initialization
     csEngine.loadImages([image], [filename])
     csEngine.clearFolder(outpath)
-    csEngine.writeFormat = 'png'
-    
+    csEngine.writeFormat = 'jpg'
+
     # image processing
     csEngine.colorBalance(10)
     csEngine.blur(4)
     csEngine.otsuThreshMultiHSV(2,colorize=True, hues=[(115,30),(55,35),(0,35)])
-    csEngine.makeTransparent()
 
     # write to output
     csEngine.writeOutput(outpath)
