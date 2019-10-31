@@ -36,43 +36,22 @@ class ColorSeparationEngine:
             self.loadImage(imageArray[i], index=i, reinitialize=False, log=False)
         print('[CS] {} images loaded.'.format(len(imageArray)))
 
-
     def loadImage(self, image, index=0, reinitialize=True, log=True):
         if reinitialize:
             self.reinitialize()
+        # metadata handling
         metadata = {}
         (imgHeight, imgWidth) = image.shape[:2]
         metadata['width'] = imgWidth
         metadata['height'] = imgHeight
         metadata['index'] = index
         metadata['color_type'] = 'RGB'
-        self.images.append(image)
         self.metadata_images.append(deepcopy(metadata))
+        
+        self.images.append(image)
         self.originals = self.images
         if log:
             print('[CS] 1 Image loaded ({} * {}).'.format(imgWidth, imgHeight))
-
-    # def loadImagesFromPath(self, path, reinitialize=True):
-    #     if reinitialize:
-    #         self.reinitialize()
-    #     self.path = path
-    #     filenames = getImageFileNames(path)
-    #     filenames.sort()
-    #     for file in filenames:
-    #         current_file = cv2.imread('{}/{}'.format(path, file))
-    #         self.images.append(current_file)
-    #         (imageHeight, imageWidth) = current_file.shape[:2]
-    #         print('height:' + imageHeight)
-    #         print('width:' + imageHeight)
-    #         print('path:' + '{}/{}'.format(path, file))
-    #     self.originals = self.images  # keep originals
-    #     print('[CS] {} images loaded from {}'.format(len(filenames), path))
-
-    # def loadImageFromPath(self, path):
-    #     self.path = path
-    #     self.images = [cv2.imread(path)]
-    #     self.originals = self.images
-    #     print('[CS] {} loaded.'.format(path))
 
     def getImagePaths(self, path):
         filenames = getImageFileNames(path)
@@ -117,7 +96,6 @@ class ColorSeparationEngine:
         for i in range(len(self.images)):
             resized = cv2.resize(self.images[i], (w, h))
             new_images.append(resized)
-
             # metadata handling
             (imgHeight, imgWidth) = resized.shape[:2]
             metadata = self.metadata_images[i]
