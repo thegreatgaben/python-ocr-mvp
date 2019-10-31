@@ -20,15 +20,22 @@ def getImageFileNames(path):
             file_list.append(filename)
     return file_list
 
+def getSubdirectories(path):
+    if path[0] != '/':
+        path = '/' + path
+    if path[-1] != '/':
+        path += '/'
+    path = os.curdir + path
+    return list(filter(lambda x: os.path.isdir(os.path.join(path, x)), os.listdir(path)))
 
 def averageIntensityValue(image):
     image = img_as_float(image)
     return np.mean(image)
 
-def deleteAllItems(path):
+def deleteAllItems(path, fileFormat='*'):
     if (path[-1] != '/'):
         path += '/'
-    files = glob.glob(path + '*')
+    files = glob.glob(path + fileFormat)
     for f in files:
         os.remove(f)
 

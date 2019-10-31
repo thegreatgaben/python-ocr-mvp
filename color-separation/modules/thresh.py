@@ -38,12 +38,27 @@ def otsu_multiclass_rgb(img, classes=2):
 def otsu_multiclass_hsv(img, classes=2, threshold=True, hues=[(115, 25), (55, 25), (0, 25)], sat_range=(0, 255), val_range=(0, 255)):
     channels = []
     output_channels = []
+    channel_metadata = []
     for hue in hues:
+        # metadata handling
+        metadata = {}
+        metadata['hue'] = hue[0]
+        metadata['hue_variance'] = hue[1]
+        
+        # start hsv masking
         channels.append(hsvMask(
-            img, hue[0], hue[1], sat_range[0], sat_range[1], val_range[0], val_range[1]
+            img,
+            hue[0],
+            hue[1],
+            sat_range[0],
+            sat_range[1],
+            val_range[0],
+            val_range[1],
         ))
         hsv = cv2.cvtColor(channels[-1], cv2.COLOR_BGR2HSV)
         h, s, v = cv2.split(hsv)
+
+        # start thresholding
         if (threshold):
             try:
                 thresholds = otsu_multiclass(s, classes)
@@ -54,6 +69,8 @@ def otsu_multiclass_hsv(img, classes=2, threshold=True, hues=[(115, 25), (55, 25
             thresholded = np.array(thresholded * 255, dtype=np.uint8)
             equalized = cv2.equalizeHist(thresholded)
             output_channels.append(equalized)
+            channel_metadata.append(metadata)
         else:
             output_channels.append(s)
-    return output_channels
+            channel_metadata.append(metadata)
+    return output_channels, channel_metadata

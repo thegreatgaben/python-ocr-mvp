@@ -1,5 +1,5 @@
 from flask import *
-import io
+import io, os
 import numpy as np
 import cv2 as cv
 import random
@@ -14,12 +14,11 @@ from mser_text_detection import MSERTextDetection
 from ColorSeparation import ColorSeparationEngine
 from ocr import OCREngine
 
-app = Flask(__name__)
-'''
-For local server...
+# app = Flask(__name__)
+# For local server...
 app = Flask(__name__, static_url_path='',
             static_folder='.',)
-'''
+
 app.config["ALLOWED_EXTENSIONS"] = set(['png', 'jpg', 'jpeg'])
 
 global ocrEngine, textDetector, csEngine
@@ -125,24 +124,43 @@ def ocr_endpoint():
 
 @app.route("/api/v1/cs", methods=["POST"])
 def color_separation_endpoint():
+    # handle upload
     image, filename = handle_file_upload(request)
     if image.shape[0] == 0:
         return createErrorResponse("NO IMAGE UPLOADED", 400)
 
-    outpath = 'color-separation/outputs'
-    csEngine.writeFormat = 'jpg'
+    # creating new output directories for each call
+    outpath_parent = 'color-separation/outputs'
+    subdirs = csEngine.getSubdirectories(outpath_parent)
+    outpath = outpath_parent + '/' + str(len(subdirs) + 1)
+    os.mkdir(outpath)
+
+    # output writing initialization
+    csEngine.loadImages([image], [filename])
     csEngine.clearFolder(outpath)
-    csEngine.images = [image]
+    csEngine.writeFormat = 'jpg'
+    
+    # image processing
     csEngine.colorBalance(10)
     csEngine.blur(4)
     csEngine.otsuThreshMultiHSV(2,colorize=True, hues=[(115,30),(55,35),(0,35)])
-    csEngine.writeOutput(outpath)
-    imagePaths = csEngine.getImagePaths(outpath)
 
+    # write to output
+    csEngine.writeOutput(outpath)
+
+    # pack payload with proper metadata
+    metadata = csEngine.metadata_images
+    writeFormat = csEngine.writeFormat
     payload = {}
-    payload["filenames"] = imagePaths
+    payload['layers'] = []
+    for i in range(len(metadata)):
+        layer = metadata[i]
+        index = metadata[i]['index']
+        layer['filepath'] = '{}/{}.{}'.format(outpath, index, writeFormat)
+        payload['layers'].append(layer)
+
+    # send payload as response
     response = jsonify(payload)
-    print('response haha: ' + str(response))
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response, 200
 
