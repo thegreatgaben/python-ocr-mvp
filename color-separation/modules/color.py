@@ -72,6 +72,12 @@ def simpleColorBalance(img, percent=1):
 def invert(image):
     return (255-image)
 
+def makeTransparent(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _,alpha = cv2.threshold(gray,0,255,cv2.THRESH_BINARY)
+    b, g, r = cv2.split(image)
+    rgba = [b,g,r, alpha]
+    return cv2.merge(rgba, 4)
 
 def RGB2CMYK(rgb, arrayInsteadOfTuple=False):
     r_ = rgb[0]/255

@@ -138,12 +138,13 @@ def color_separation_endpoint():
     # output writing initialization
     csEngine.loadImages([image], [filename])
     csEngine.clearFolder(outpath)
-    csEngine.writeFormat = 'jpg'
+    csEngine.writeFormat = 'png'
     
     # image processing
     csEngine.colorBalance(10)
     csEngine.blur(4)
     csEngine.otsuThreshMultiHSV(2,colorize=True, hues=[(115,30),(55,35),(0,35)])
+    csEngine.makeTransparent()
 
     # write to output
     csEngine.writeOutput(outpath)

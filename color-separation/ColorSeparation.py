@@ -5,7 +5,7 @@ from modules.utils import getImageFileNames, viewImage, averageIntensityValue, s
 from modules.edge import cannyEdge
 from modules.hist import histBackProj, equalizeSaturation, showRGBHistogram
 from modules.thresh import otsu, otsu_multiclass_grey, otsu_multiclass_hsv, otsu_multiclass_rgb
-from modules.color import simpleColorBalance, invert
+from modules.color import simpleColorBalance, invert, makeTransparent
 
 
 class ColorSeparationEngine:
@@ -114,6 +114,22 @@ class ColorSeparationEngine:
         print('[CS] {} images blurred (blur_size={})'.format(
             len(self.images), blur_size
         ))
+
+    def makeTransparent(self):
+        new_images = []
+        new_metadata = []
+        for i in range(len(self.images)):
+            out_img = makeTransparent(self.images[i])
+            new_images.append(out_img)
+
+            # metadata handling
+            metadata = self.metadata_images[i]
+            metadata['transparent'] = 'true'
+            new_metadata.append(deepcopy(metadata))
+        self.images = new_images
+        self.metadata_images = new_metadata
+        print('[CS] {} images processed with makeTransparent'.format(len(self.images)))
+
 
     def histBackProjection(self, bins=10):
         new_images = []
