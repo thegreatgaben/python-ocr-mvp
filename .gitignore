@@ -4,4 +4,5 @@ output/
 .idea
 .vscode
 color-separation/images/
+color-separation/outputs/
 *.bmp
