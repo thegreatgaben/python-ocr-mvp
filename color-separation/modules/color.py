@@ -47,7 +47,7 @@ def apply_threshold(matrix, low_value, high_value):
 
 
 def simpleColorBalance(img, percent=1):
-    assert img.shape[2] == 3
+    assert img.shape[2] >= 3
     assert percent > 0 and percent < 100
     half_percent = percent / 200.0
     channels = cv2.split(img)
