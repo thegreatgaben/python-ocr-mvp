@@ -52,7 +52,16 @@ class OCREngine:
             text = pytesseract.image_to_string(finalTextImage, config=tessConfig);
             if text != '':
                 print(text);
-                recognisedTexts.append(text);
+                recognisedTexts.append({
+                    "text": text,
+                    "left": int(startX),
+                    "ratioLeft": startX/imageMeta["width"],
+                    "top": int(startY),
+                    "ratioTop": startY/imageMeta["height"],
+                    # Hard coded values for now
+                    "fontFamily": "Arial",
+                    "fontSize": 20
+                });
                 if self.diagnostics:
                     textHeight = finalTextImage.shape[0];
                     cv.putText(textImage, text, (0, 50), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2, cv.LINE_AA);

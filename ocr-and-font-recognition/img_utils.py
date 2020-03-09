@@ -41,8 +41,10 @@ def outputImage(image, imagePath):
     if not os.path.exists(outputPath):
         os.makedirs(outputPath);
     imageName = os.path.basename(imagePath);
+    fullPath = os.path.join(outputPath, imageName);
     # show the output image
-    cv.imwrite(os.path.join(outputPath, imageName), image);
+    cv.imwrite(fullPath, image);
+    return fullPath;
 
 
 def detectRects(image, preprocessed, minCoverageArea=0.6, showResult=False):

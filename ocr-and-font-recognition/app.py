@@ -32,13 +32,13 @@ if __name__ == "__main__":
     imageMeta["height"] = imageHeight;
 
     if (args["mser"]):
-        mser = MSERTextDetection();
+        mser = MSERTextDetection(diagnostics=True);
         boxes = mser.detectTexts(image, imageMeta, "mser_detected_texts.{}".format(imageMeta["ext"]));
     elif (args["east"]):
         east = EASTTextDetection(minConfidence=args["min_confidence"]);
         (boxes, confidences) = east.detectTexts(image, imageMeta);
 
     if not args["no_ocr"]:
-        ocrEngine = OCREngine(language=args["language"], padding=True, roiPadding=0.025);
-        ocrEngine.performOCR(image, boxes, imageMeta);
+        ocrEngine = OCREngine(padding=True, roiPadding=0.025);
+        ocrEngine.performOCR(image, boxes, imageMeta, languages=args["language"]);
 
