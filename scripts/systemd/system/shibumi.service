@@ -1,0 +1,14 @@
+[Unit]
+Description="Flask instance to serve Shibumi project (For Google Cloud Platform setup). This file will be placed in `/etc/systemd/system` to allow auto init during server initialise"
+After=network.target
+
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/shibumi/python-cv
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/miniconda3/envs/nixel-ocr-and-font-recognition/bin:/root/miniconda3/condabin"
+ExecStart=/root/miniconda3/envs/nixel-ocr-and-font-recognition/bin/python app.py
+
+[Install]
+WantedBy=multi-user.target
