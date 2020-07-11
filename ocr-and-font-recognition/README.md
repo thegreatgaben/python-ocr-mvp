@@ -18,6 +18,3 @@
 2. To update the environment.yml, run `conda env export | grep -v "prefix" > environment.yml`
 3. To update your current environment, run `conda env update -f environment.yml --prune`
 
-# How to run the tests?
-
-1. Try something like `python -m tests.font_matching.font_matching`
