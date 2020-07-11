@@ -1,0 +1,31 @@
+
+.brand {
+  line-height: 0;
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 24px;
+}
+
+.textContainer {
+  display: flex;
+  align-items: baseline;
+  height: 0;
+}
+
+.brandText {
+  font-family: "Source Sans Pro", sans-serif;
+  margin-left: 5px;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  font-size: 18px;
+  color: #7B7B7B;
+}
+
+.subtext {
+  font-size: 14px;
+  font-weight: 400;
+  margin: 0 8px 0 2px;
+}

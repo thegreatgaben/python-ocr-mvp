@@ -1,0 +1,33 @@
+@import "AppLayout";
+
+.brand {
+  width: 100%;
+  display: flex;
+  height: 56px;
+  justify-content: center;
+  align-items: center;
+}
+
+.sidebarMenu {
+  border-right: 0;
+  margin-left: -1px;
+}
+
+.sidebarTitle {
+  height: 36px;
+  margin-top: 12px;
+  line-height: 100%;
+  padding: 16px 16px 10px;
+  font-size: 12px;
+  color: #7B7B7B;
+}
+
+:global(.ant-menu-item){
+  font-size: 13px !important;
+
+  i {
+    font-size: 13px !important;
+  }
+}
+
+

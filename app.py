@@ -7,31 +7,24 @@ import random
 
 # Path to your python modules
 import sys
-sys.path.append("./color-separation/")
 sys.path.append("./ocr-and-font-recognition/")
 
 from mser_text_detection import MSERTextDetection
-from ColorSeparation import ColorSeparationEngine
 from ocr import OCREngine
 from img_utils import outputImage
 
-app = Flask(__name__)
-# For local server...
-'''
 app = Flask(__name__, static_url_path='',
             static_folder='.',)
-'''
 
 app.config["ALLOWED_EXTENSIONS"] = set(['png', 'jpg', 'jpeg'])
 
-global ocrEngine, textDetector, csEngine
+global ocrEngine, textDetector
 
 def main():
     # All things global should be defined here
-    global ocrEngine, textDetector, csEngine
+    global ocrEngine, textDetector
     textDetector = MSERTextDetection()
     ocrEngine = OCREngine(padding=True, roiPadding=0.025)
-    csEngine = ColorSeparationEngine()
 
 
 def valid_file(filename):
@@ -126,51 +119,6 @@ def ocr_endpoint():
     response = jsonify(payload)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response, 200
-
-
-@app.route("/api/v1/cs", methods=["POST"])
-def color_separation_endpoint():
-    # handle upload
-    image, filename = handle_file_upload(request)
-    if image.shape[0] == 0:
-        return createErrorResponse("NO IMAGE UPLOADED", 400)
-
-    # creating new output directories for each call
-    outpath_parent = 'color-separation/outputs'
-    subdirs = csEngine.getSubdirectories(outpath_parent)
-    outpath = outpath_parent + '/' + str(len(subdirs) + 1)
-    os.mkdir(outpath)
-
-    # output writing initialization
-    csEngine.loadImages([image], [filename])
-    csEngine.clearFolder(outpath)
-    csEngine.writeFormat = 'png'
-    
-    # image processing
-    csEngine.colorBalance(10)
-    csEngine.blur(4)
-    csEngine.otsuThreshMultiHSV(2,colorize=True, hues=[(115,30),(55,35),(0,35)])
-    csEngine.makeTransparent()
-
-    # write to output
-    csEngine.writeOutput(outpath)
-
-    # pack payload with proper metadata
-    metadata = csEngine.metadata_images
-    writeFormat = csEngine.writeFormat
-    payload = {}
-    payload['layers'] = []
-    for i in range(len(metadata)):
-        layer = metadata[i]
-        index = metadata[i]['index']
-        layer['filepath'] = '{}/{}.{}'.format(outpath, index, writeFormat)
-        payload['layers'].append(layer)
-
-    # send payload as response
-    response = jsonify(payload)
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    return response, 200
-
 
 if __name__ == "__main__":
     main()

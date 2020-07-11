@@ -1,0 +1,42 @@
+.col {}
+
+.gridCard {
+  min-height: 80px;
+  height: 100%;
+
+  :global(.ant-card-body) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .spaceBetween {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  :global(.ant-statistic) {
+    overflow: hidden;
+  }
+
+  :global(.ant-statistic-title) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.ant-statistic-content) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.ant-statistic-content-value) {
+    margin-left: 10px;
+    color: #1a6bb8;
+  }
+
+  .filterTag {
+    height: fit-content;
+  }
+}

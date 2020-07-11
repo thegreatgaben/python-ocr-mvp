@@ -1,0 +1,62 @@
+$header-height: 42px;
+
+.header {
+  padding: 0;
+  height: $header-height;
+  position: fixed;
+  z-index: 1;
+  width: 100%;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #D5D5D5;
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+.headerButton {
+  margin: 0 5px;
+}
+
+.menuClickable {
+  border: 1px solid #D5D5D5;
+  border-radius: 0;
+  height: calc(100% + 2px);
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  margin: -1px;
+}
+
+.dropdownContainer {}
+
+.dropdownMenu {
+  display: flex;
+  margin: -3px 0;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.15);
+  background-color: #FFFFFF;
+}
+
+.menuList {
+  width: 250px;
+  margin: 10px;
+  border-right: 0 !important;
+}
+
+.menuGrid {
+  height: 500px;
+  background-color: #F5F5F5;
+  padding: 0 10px;
+}
+
+.layout:global(.ant-layout) {
+  min-height: 100vh;
+}
+
+.content {
+  margin-top: 42px;
+  min-height: calc(100vh - #{$header-height}) !important;
+  height: calc(100vh - #{$header-height});
+}
