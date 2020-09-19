@@ -7,6 +7,7 @@ export const ImageDisplay = (props) => {
   const [imgURL, setImgURL] = useState();
   if (!props.loading) {
     if (props.src && props.src instanceof File) {
+        //@ts-ignore
       readFileAsURL(props.src, setImgURL);
     } else {
       if (imgURL !== props.src) {

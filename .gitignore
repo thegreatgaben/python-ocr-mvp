@@ -6,3 +6,4 @@ output/
 color-separation/images/
 color-separation/outputs/
 *.bmp
+.vim
