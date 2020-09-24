@@ -3,8 +3,7 @@ This project was a minimum viable product of Nixel Sdn Bhd, that aimed to help d
 work more efficiently. We had an ambitious goal to make it an alternative web solution to Adobe Illustrator, 
 that has tools specially made to benefit carton box printing designers. 
 One such tool was to employ Optical Character Recognition (OCR) 
-and Font matching, as well as Color Separation on an image. OCR and Color Separation was only implemented in this case. I worked on the OCR part, while one of my other colleague worked on Color Separation. I also contributed to the development of the frontend application. Although the project did not went through
-in the end, it was a good learning experience.
+and Font matching, as well as Color Separation on an image. OCR and Color Separation was only implemented in this case. I worked on the OCR part, while one of my other colleague worked on Color Separation. I also contributed to the development of the frontend application. Although it is only an MVP, this project gave me a good learning experience.
 
 You can see a live demo of this app [here](https://shibumi.gaben.tech/).
 
